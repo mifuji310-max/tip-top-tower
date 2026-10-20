@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.14.1">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.14.1">
-<link rel="manifest" href="manifest.webmanifest?v=0.14.1">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.15.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.15.0">
+<link rel="manifest" href="manifest.webmanifest?v=0.15.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -140,7 +140,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.14.1';
+const VERSION='v0.15.0';
 const $=id=>document.getElementById(id);const cv=$('game');$('ver').textContent=VERSION;
 const gl=cv.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:false})||cv.getContext('experimental-webgl',{antialias:true,alpha:true});
 const fallbackCtx=gl?null:cv.getContext('2d');
@@ -198,10 +198,26 @@ const THEMES=[
  {name:'ダーク',blocks:['#2c3150','#3b2f55','#23394d','#463352'],win:'#7ff6ff',winP:'#ff7ae0',edge:[.55,.62,1],edgeA:.45},
  {name:'ビビッド',blocks:['#ff4d6d','#ff8a1f','#8b5cf6','#3b6cf6'],win:'#ffffff',winP:'#fff36b',edge:[1,1,1],edgeA:.4},
  {name:'無機質',blocks:['#9aa3ad','#7f8893','#b5bcc4','#6b7380'],win:'#cfe8ff',winP:'#ffffff',edge:[.85,.88,.92],edgeA:.35},
- {name:'モノクロ',blocks:['#f2f2f2','#2a2a2a','#d6d6d6','#444444'],win:'#9a9a9a',winP:'#ffffff',edge:[.6,.6,.6],edgeA:.5}];
+ {name:'モノクロ',blocks:['#f2f2f2','#2a2a2a','#d6d6d6','#444444'],win:'#9a9a9a',winP:'#ffffff',edge:[.6,.6,.6],edgeA:.5},
+ {name:'さくら',blocks:['#ffd6e0','#f7b2c4','#fff5f8','#e993ac'],win:'#fff0f4',winP:'#ff9ec0',edge:[1,.9,.94],edgeA:.35},
+ {name:'夕焼け',blocks:['#ff8a5c','#f25f5c','#c8467a','#7b3f8c'],win:'#ffd27a',winP:'#fff1a8',edge:[1,.85,.7],edgeA:.35},
+ {name:'雪景色',blocks:['#f4f7fb','#d9e1ea','#b7c3d1','#2f3e5a'],win:'#ffb45c',winP:'#ffd38a',edge:[.75,.82,.92],edgeA:.45},
+ {name:'深海',blocks:['#0e2a47','#123a5c','#1b4f6e','#0a1f38'],win:'#5fe0d0',winP:'#b48cff',edge:[.4,.7,.9],edgeA:.4},
+ {name:'宇宙',blocks:['#1a1238','#2a1a52','#3b2470','#120c26'],win:'#ffffff',winP:'#ffd6ff',edge:[.7,.6,1],edgeA:.4},
+ {name:'木',blocks:['#c8955f','#a8703f','#e0b884','#7a4e2a'],win:'#ffe2a0',winP:'#fff3c8',edge:[1,.9,.75],edgeA:.3},
+ {name:'レンガ',blocks:['#b5523b','#8f3b2b','#d27a5a','#c9a27e'],win:'#ffe08a',winP:'#fff5c0',edge:[1,.9,.8],edgeA:.3},
+ {name:'ガラス張り',blocks:['#5f7c99','#7896b2','#46617d','#9bb3c9'],win:'#e8f6ff',winP:'#ffffff',edge:[.85,.93,1],edgeA:.5},
+ {name:'方眼紙',blocks:['#f5f0e1','#ece4cc','#f8f4e8','#e3d9bd'],win:'#3a3a3a',winP:'#d4483b',edge:[.2,.2,.2],edgeA:.75},
+ {name:'和風',blocks:['#c8423a','#2b2b2b','#efe6d2','#26457a'],win:'#ffe6b0',winP:'#ffb36b',edge:[1,.95,.85],edgeA:.3},
+ {name:'サイバー',blocks:['#0d0d16','#160f24','#0d0d16','#1d1133'],win:'#ff3df0',winP:'#3dd8ff',edge:[1,.25,.9],edgeA:.9},
+ {name:'お菓子',blocks:['#6b3e26','#ff9fb2','#fff1d6','#d9904a'],win:'#fff6e0',winP:'#ff6f91',edge:[1,.95,.9],edgeA:.3},
+ {name:'レトロゲーム',blocks:['#ac3232','#5b3a8a','#3f5fb5','#d97f4a'],win:'#f8d878',winP:'#ffffff',edge:[0,0,0],edgeA:.55},
+ {name:'ハロウィン',blocks:['#2b1d3a','#ff7a1a','#5b2a86','#1a1a1a'],win:'#ffb347',winP:'#ffe066',edge:[1,.6,.2],edgeA:.35},
+ {name:'砂漠',blocks:['#e2c290','#c98a5b','#d9a3a0','#b5764f'],win:'#ffc35c',winP:'#fff0b3',edge:[1,.95,.85],edgeA:.3}];
 let theme=THEMES[0];
 // ステージ：ステージごとに決まったテーマ（ステージ1＝練習はパステル）。エンドレス：遊ぶたびにランダム
-function pickTheme(preview){if(preview)return THEMES[0];if(isStage())return stageIdx===0?THEMES[0]:THEMES[1+((stageIdx*3+1)%(THEMES.length-1))];return THEMES[Math.floor(Math.random()*THEMES.length)]}
+const themeForStage=i=>i===0?THEMES[0]:THEMES[1+((i*7+3)%(THEMES.length-1))];
+function pickTheme(preview){if(preview)return THEMES[0];if(isStage())return themeForStage(stageIdx);return THEMES[Math.floor(Math.random()*THEMES.length)]}
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
 const mixHex=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(255*(v+(B[i]-v)*t)).toString(16).padStart(2,'0')).join('')};
 let faces=[],edges=[],boxRecords=[];
@@ -273,7 +289,7 @@ function openStages(){showPanel(el.stagePanel);blockText($('stageTitle'),'STAGE'
  list.scrollTop=list.scrollHeight}
 // ステージ紹介：遊ぶ前に、新しく出る仕掛けを1つだけ説明する（プレイ中は読む余裕がないため）
 function openIntro(i){stageIdx=i;showPanel(el.intro);blockText($('introBadge'),'STAGE '+(i+1));$('introTitle').textContent=STAGES[i].name+'（'+STAGES[i].m+'m）';
- $('introText').textContent=STAGES[i].intro;$('introStars').textContent='★★★ … PERFECT率70%以上でクリア'}
+ $('introText').textContent=STAGES[i].intro;$('introStars').textContent='デザイン：'+themeForStage(i).name+'　／　★★★ … PERFECT率70%以上'}
 // 空の色を高さ(m)に合わせて塗り替える（0.5m以上変わったときだけ）
 function applySky(m){if(Math.abs(m-skyShown)<.5)return;skyShown=m;let i=0;while(i<SKY.length-2&&m>SKY[i+1][0])i++;
  const [m0,c0,s0]=SKY[i],[m1,c1,s1]=SKY[i+1],t=Math.max(0,Math.min(1,(m-m0)/(m1-m0))),c=c0.map((v,k)=>mixHex(v,c1[k],t));

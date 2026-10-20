@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.19.1">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.19.1">
-<link rel="manifest" href="manifest.webmanifest?v=0.19.1">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.0">
+<link rel="manifest" href="manifest.webmanifest?v=0.20.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -149,7 +149,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.19.1';
+const VERSION='v0.20.0';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -231,7 +231,7 @@ window.addEventListener('resize',()=>{fit();if(typeof menuShownAt!=='undefined')
 const H=.68,MAX_TIME=60,TIME_CAP=80,RUN_CAP=180,BASE=4.6,MARGIN=5.6;
 const HURRY=10,FLOOR_M=10,CAM_DIST=17.8,CAM_LIFT=11.8,ANGLES=[.55,1.55,2.55,-.55],MAX_CHARMS=3;
 // 1段＝10mとして比べる実在の建物（高さm, 名前）
-const LANDMARKS=[[15,'奈良の大仏'],[93,'自由の女神'],[120,'牛久大仏'],[243,'東京都庁'],[300,'あべのハルカス'],[333,'東京タワー'],[634,'東京スカイツリー'],[828,'ブルジュ・ハリファ'],[3776,'富士山']];
+const LANDMARKS=[[15,'奈良の大仏'],[93,'自由の女神'],[120,'牛久大仏'],[243,'東京都庁'],[192,'ゲートウェイ・アーチ'],[227,'ゴールデンゲート・ブリッジ'],[300,'あべのハルカス'],[319,'クライスラー・ビル'],[333,'東京タワー'],[338,'マカオタワー'],[350,'ザ・ストラット'],[634,'東京スカイツリー'],[828,'ブルジュ・ハリファ'],[3776,'富士山']];
 // 連続PERFECTで鳴らすドレミファソラシド
 const SCALE=[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5];
 // 特殊ブロック：色（alt と交互に光る）・まわりに出る粒の色
@@ -272,7 +272,15 @@ const STAGES=[
  {name:'牛久大仏',m:120,kinds:['gold'],wind:false,first:'gold',intro:'新登場：ロケットブロック\n青いブロックをPERFECTで置くと、さらに2段いっきに積み上がる！（1回で3段）'},
  {name:'東京都庁',m:243,kinds:['gold','ice'],wind:false,first:'ice',intro:'新登場：氷ブロック\n水色の氷ブロックは、いつもより速く動く'},
  {name:'あべのハルカス',m:300,kinds:['gold','ice','grow'],wind:false,first:'grow',intro:'新登場：ふくらむブロック\nタワーが細くなると緑のブロックが出てくる。PERFECTで置くと太くなる'},
- {name:'東京タワー',m:333,kinds:['gold','ice','grow'],wind:true,intro:'新登場：風\n10段ごとに風がふく。\n白い線と同じ向きに動くと速く、逆だと遅い'}];
+ {name:'東京タワー',m:333,kinds:['gold','ice','grow'],wind:true,intro:'新登場：風\n10段ごとに風がふく。\n白い線と同じ向きに動くと速く、逆だと遅い'},
+ // 第1章の後半（v0.20.0）：あとから作った特殊ブロックを1つずつ。高さは東京タワーくらいまで（章ごとに高さを戻す方針）
+ {name:'ゲートウェイ・アーチ',m:192,kinds:['gold','ice','grow','magnet'],wind:true,first:'magnet',intro:'新登場：磁石ブロック\n赤い磁石ブロックは、近くで止めると吸い付いてPERFECTになる'},
+ {name:'ゴールデンゲート・ブリッジ',m:227,kinds:['gold','ice','grow','magnet','warp'],wind:true,first:'warp',intro:'新登場：ワープブロック\n紫のワープブロックは往復しない。\n端まで行くと、反対の端から出てくる'},
+ {name:'クライスラー・ビル',m:319,kinds:['gold','ice','grow','magnet','warp','ghost'],wind:true,first:'ghost',intro:'新登場：おばけブロック\n動いている途中で、ときどきフッと消える。\n消えている間も動きは止まらないよ'},
+ {name:'マカオタワー',m:338,kinds:['gold','ice','grow','magnet','warp','ghost','thunder'],wind:true,first:'thunder',intro:'新登場：雷ブロック\n黄色い雷ブロックは要注意！\n外すと、ずれの2倍けずれる'},
+ {name:'ザ・ストラット',m:350,kinds:['gold','ice','grow','magnet','warp','ghost','thunder','mini'],wind:true,first:'mini',intro:'第1章のしめくくり！新登場：ミニブロック\n幅が半分ぐらいで来る。まわりの白い枠を下の段に合わせてタップ。PERFECTなら太さがもどる'}];
+// 章：10ステージで1章。章ごとに色のテーマを決める（まとめ.md の章立て）
+const CHAPTER_THEMES=[['パステル']];
 const goalFloors=i=>Math.ceil(STAGES[i].m/FLOOR_M);
 // 1往復の長さ：端から反対の端へ行って戻るまで
 const TRIP=4*(MARGIN+1);
@@ -304,7 +312,7 @@ const THEMES=[
  {name:'砂漠',blocks:['#e2c290','#c98a5b','#d9a3a0','#b5764f'],win:'#ffc35c',winP:'#fff0b3',edge:[1,.95,.85],edgeA:.3}];
 let theme=THEMES[0];
 // ステージ：ステージごとに決まったテーマ（ステージ1＝練習はパステル）。エンドレス：遊ぶたびにランダム
-const themeForStage=i=>i===0?THEMES[0]:THEMES[1+((i*7+3)%(THEMES.length-1))];
+const themeForStage=i=>{const names=CHAPTER_THEMES[Math.floor(i/10)]||[],list=THEMES.filter(t=>names.includes(t.name));return list.length?list[i%list.length]:THEMES[1+((i*7+3)%(THEMES.length-1))]};
 function pickTheme(preview){if(preview)return THEMES[0];if(isStage())return themeForStage(stageIdx);return THEMES[Math.floor(Math.random()*THEMES.length)]}
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
 const mixHex=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(255*(v+(B[i]-v)*t)).toString(16).padStart(2,'0')).join('')};
@@ -379,12 +387,13 @@ function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
 const SLAB_OFFSETS=[0,14,5,17,8,12];
 function openStages(){showPanel(el.stagePanel);blockText($('stageTitle'),'STAGE');const list=$('stageList');list.innerHTML='';
  STAGES.forEach((s,i)=>{const ok=unlocked(i),n=stageStars[i],col=BLOCK_COLORS[(i+2)%BLOCK_COLORS.length];
-  const b=document.createElement('button');b.className='sitem';b.disabled=!ok;b.style.cssText='--face:'+col+';--top:'+mixHex(col,'#ffffff',.5)+';--side:'+mixHex(col,'#1c2747',.3)+';margin-left:'+SLAB_OFFSETS[i]+'px;animation-delay:'+(i*.09)+'s';
+  const b=document.createElement('button');b.className='sitem';b.disabled=!ok;b.style.cssText='--face:'+col+';--top:'+mixHex(col,'#ffffff',.5)+';--side:'+mixHex(col,'#1c2747',.3)+';margin-left:'+SLAB_OFFSETS[i%SLAB_OFFSETS.length]+'px;animation-delay:'+(i*.09)+'s';
   b.innerHTML='<svg class="num"></svg><span>'+(ok?s.name:'？？？')+'<small>'+s.m+'m・'+goalFloors(i)+'段</small></span><span class="stars">'+(ok?(n?'★'.repeat(n)+'☆'.repeat(3-n):'NEW'):'🔒')+'</span>';
   blockText(b.querySelector('.num'),String(i+1),[ok?'#ffffff':'#8d97b8']);b.addEventListener('click',()=>openIntro(i));list.appendChild(b)});
- // てっぺんに「つづき」を予告（次の目標：エンパイア・ステート・ビル）
- const g=document.createElement('div');g.className='sitem ghost';g.style.marginLeft=SLAB_OFFSETS[5]+'px';g.innerHTML='<span>つづきは近日公開…<small>めざせ ブルジュ・ハリファ 828m</small></span>';list.appendChild(g);
- list.scrollTop=list.scrollHeight}
+ // てっぺんに「つづき」を予告（次は第2章 日本編）
+ const g=document.createElement('div');g.className='sitem ghost';g.style.marginLeft=SLAB_OFFSETS[5]+'px';g.innerHTML='<span>つづきは近日公開…<small>第2章 日本編 ／ めざせ ブルジュ・ハリファ 828m</small></span>';list.appendChild(g);
+ // ステージが増えたので、いま遊べる一番上のステージが真ん中に来るようにスクロールする
+ const cur=list.children[STAGES.reduce((k,_,i)=>unlocked(i)?i:k,0)];list.scrollTop=cur.offsetTop-list.offsetTop-list.clientHeight/2+cur.offsetHeight/2}
 // ステージ紹介：遊ぶ前に、新しく出る仕掛けを1つだけ説明する（プレイ中は読む余裕がないため）
 function openIntro(i){stageIdx=i;showPanel(el.intro);blockText($('introBadge'),'STAGE '+(i+1));$('introTitle').textContent=STAGES[i].name+'（'+STAGES[i].m+'m）';
  $('introText').textContent=STAGES[i].intro;$('introStars').textContent='デザイン：'+themeForStage(i).name+'　／　★★★ … PERFECT率70%以上'}

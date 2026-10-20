@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.16.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.16.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.16.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.17.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.17.0">
+<link rel="manifest" href="manifest.webmanifest?v=0.17.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -78,6 +78,12 @@ button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .stat small .bt.flat,.result small .bt.flat,.best small .bt.flat{height:7px;margin:2px auto 4px}
 .effect .bt{width:88%;height:auto;max-height:30px;filter:drop-shadow(0 3px 0 #1c2747) drop-shadow(0 6px 14px #10183a)}.bottom-hint .bt{height:11px;opacity:.9}
 .primary small{margin-top:5px}
+/* ルール説明 */
+#rulesPanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}
+.rules{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;text-align:left;padding-right:2px}.rules::-webkit-scrollbar{display:none}
+.rules h3{font-size:13px;font-weight:1000;color:#ffe6a4;margin:14px 0 4px;letter-spacing:.04em}.rules h3:first-child{margin-top:4px}
+.rules p{font-size:12px!important;line-height:1.75!important;margin:0 0 4px!important;color:#dce6fa}
+.krow{display:flex;align-items:center;gap:9px;font-size:12px;line-height:1.5;color:#dce6fa;margin:6px 0}.krow svg{width:24px;height:24px;flex:none}.krow b{color:#fff}
 /* ステージ選択：ステージを「タワー」として下から積み上げる */
 #stagePanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}#stagePanel .stower{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}#stagePanel .stower::-webkit-scrollbar{display:none}
 .phead{display:flex;align-items:center;gap:12px;margin-bottom:4px;flex:none}.phead .btitle{margin:0;height:26px}.sub.mini{width:auto;flex:none;margin:6px 0 0;padding:4px 12px;font-size:16px;--d:4px}
@@ -127,10 +133,11 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
     <div class="effect" id="effect" aria-live="polite"><span id="effect-title"></span><small id="effect-detail"></small></div>
     <div class="bottom-hint" id="bottomHint">TAP TO STACK</div>
     <div class="overlay" id="overlay">
-      <div class="panel" id="startPanel"><svg class="logo" id="logo" role="img" aria-label="Tip Top Tower"></svg><p class="tagline">ブロックを積んで、空のてっぺんへ。</p><button class="primary" id="startBtn" aria-label="エンドレス"></button><button class="primary alt" id="stageBtn" aria-label="ステージ"></button><button class="sub" id="badgeBtnStart" aria-label="バッジ"></button></div>
+      <div class="panel" id="startPanel"><svg class="logo" id="logo" role="img" aria-label="Tip Top Tower"></svg><p class="tagline">ブロックを積んで、空のてっぺんへ。</p><button class="primary" id="startBtn" aria-label="エンドレス"></button><button class="primary alt" id="stageBtn" aria-label="ステージ"></button><div class="subrow"><button class="sub" id="badgeBtnStart" aria-label="バッジ"></button><button class="sub" id="rulesBtn" aria-label="ルール"></button></div></div>
       <div class="panel" id="stagePanel" hidden><div class="phead"><button class="sub mini" id="stageBack" aria-label="もどる">←</button><svg class="btitle" id="stageTitle" role="img" aria-label="STAGE"></svg></div><p class="psub">下から順にクリアしよう</p><div class="stower" id="stageList"></div></div>
       <div class="panel" id="introPanel" hidden><svg class="btitle" id="introBadge" role="img"></svg><h2 id="introTitle"></h2><p id="introText"></p><p class="psub" id="introStars"></p><button class="primary" id="introStart" aria-label="スタート"></button><button class="sub" id="introBack" aria-label="もどる"></button></div>
       <div class="panel" id="endPanel" hidden><svg class="btitle" id="endBadge" role="img"></svg><h2 id="endTitle">ゲーム終了</h2><div class="stars-big" id="endStars" hidden></div><p id="endText">もう一度挑戦してみよう</p><div class="result"><div><small id="lblFScore">SCORE</small><strong id="finalScore">0</strong></div><div><small id="lblFHeight">高さ</small><strong id="finalHeight">0</strong></div><div><small id="lblFPeople">住人</small><strong id="finalResidents">0</strong></div></div><button class="primary" id="nextBtn" hidden aria-label="次のステージ"></button><button class="primary" id="againBtn" aria-label="もう一度"></button><div class="subrow"><button class="sub" id="viewBtn" aria-label="タワーを見る"></button><button class="sub" id="badgeBtnEnd" aria-label="バッジ"></button></div><button class="sub" id="menuBtn" aria-label="メニューへ"></button></div>
+      <div class="panel" id="rulesPanel" hidden><div class="phead"><button class="sub mini" id="rulesBack" aria-label="もどる">←</button><svg class="btitle" id="rulesTitle" role="img" aria-label="RULES"></svg></div><div class="rules" id="rulesBody"></div></div>
       <div class="panel" id="badgePanel" hidden><svg class="btitle" id="badgeTitle" role="img" aria-label="BADGES"></svg><p class="psub" id="badgeCount"></p><div class="bgrid" id="badgeGrid"></div><button class="sub" id="badgeBack" aria-label="もどる"></button></div>
     </div>
   </section>
@@ -140,7 +147,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.16.0';
+const VERSION='v0.17.0';
 const $=id=>document.getElementById(id);const cv=$('game');$('ver').textContent=VERSION;
 const gl=cv.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:false})||cv.getContext('experimental-webgl',{antialias:true,alpha:true});
 const fallbackCtx=gl?null:cv.getContext('2d');
@@ -232,15 +239,16 @@ const themeForStage=i=>i===0?THEMES[0]:THEMES[1+((i*7+3)%(THEMES.length-1))];
 function pickTheme(preview){if(preview)return THEMES[0];if(isStage())return themeForStage(stageIdx);return THEMES[Math.floor(Math.random()*THEMES.length)]}
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
 const mixHex=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(255*(v+(B[i]-v)*t)).toString(16).padStart(2,'0')).join('')};
-let faces=[],edges=[],boxRecords=[];
-function box(x,y,z,w,h,d,color,alpha=1,drawEdges=true){if(w<=.003||h<=.003||d<=.003)return;boxRecords.push({x,y,z,w,h,d,color,alpha,drawEdges});
+let faces=[],edges=[],facesT=[],edgesT=[],boxRecords=[];
+function box(x,y,z,w,h,d,color,alpha=1,drawEdges=true){if(w<=.003||h<=.003||d<=.003)return;boxRecords.push({x,y,z,w,h,d,color,alpha,drawEdges});const F=alpha<1?facesT:faces,E=alpha<1?edgesT:edges;
  const X0=x-w/2,X1=x+w/2,Y0=y-h/2,Y1=y+h/2,Z0=z-d/2,Z1=z+d/2;
  const p=[[X0,Y0,Z0],[X1,Y0,Z0],[X1,Y1,Z0],[X0,Y1,Z0],[X0,Y0,Z1],[X1,Y0,Z1],[X1,Y1,Z1],[X0,Y1,Z1]];
  const col=rgb(color),fdefs=[[[4,5,6,7],.88],[[1,0,3,2],.65],[[0,4,7,3],.73],[[5,1,2,6],.97],[[3,7,6,2],1.22],[[0,1,5,4],.50]];
- for(const [ind,shade] of fdefs){for(const i of [0,1,2,0,2,3]){faces.push(...p[ind[i]],...col.map(c=>Math.min(1,c*shade)),alpha)}}
- if(drawEdges){const pairs=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(const [a,b]of pairs){const ec=theme.edge;edges.push(...p[a],...ec,alpha*theme.edgeA,...p[b],...ec,alpha*theme.edgeA)}}
+ for(const [ind,shade] of fdefs){for(const i of [0,1,2,0,2,3]){F.push(...p[ind[i]],...col.map(c=>Math.min(1,c*shade)),alpha)}}
+ if(drawEdges){const pairs=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(const [a,b]of pairs){const ec=theme.edge;E.push(...p[a],...ec,alpha*theme.edgeA,...p[b],...ec,alpha*theme.edgeA)}}
 }
-function drawBuffer(buffer,items,mode){if(!items.length)return;gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(items),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(aColor,4,gl.FLOAT,false,28,12);gl.enableVertexAttribArray(aPosition);gl.enableVertexAttribArray(aColor);gl.drawArrays(mode,0,items.length/7)}
+let f32=new Float32Array(1<<16);
+function drawBuffer(buffer,items,mode){if(!items.length)return;if(f32.length<items.length)f32=new Float32Array(Math.ceil(items.length*1.5));f32.set(items);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,f32.subarray(0,items.length),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(aColor,4,gl.FLOAT,false,28,12);gl.enableVertexAttribArray(aPosition);gl.enableVertexAttribArray(aColor);gl.drawArrays(mode,0,items.length/7)}
 const read=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch{return d}};const write=(k,v)=>{try{localStorage.setItem(k,String(v))}catch{}};
 let best=Math.max(0,Number(read('pittariTower3D.best',read('pittariTower3D.v03.best',0)))||0),bestHeight=Math.max(0,Number(read('pittariTower3D.bestHeight',0))||0);
 let soundOn=read('pittariTower3D.sound','on')==='on',audio=null;
@@ -254,12 +262,12 @@ const isStage=()=>mode==='stage';
 const unlocked=i=>i===0||stageStars[i-1]>0;
 let state='ready',stack=[],moving=null,falling=[],sparks=[],score=0,combo=0,maxCombo=0,perfects=0,bonusSeconds=0,residents=0,elapsed=0,totalPlayed=0,endsIn=0,last=0,clock=0,camY=1.8,camTarget=1.8,camAz=0.55,camAzTarget=0.55,angleChoice=0,
  viewing=false,camDist=CAM_DIST,camDistT=CAM_DIST,camLift=CAM_LIFT,camLiftT=CAM_LIFT,charms=0,sparkTimer=0,winds=[],windTimer=0,skyM=0,skyShown=-1;
-const el={height:$('height'),score:$('score'),combo:$('combo'),time:$('time'),best:$('best'),level:$('level'),bar:$('timebar'),overlay:$('overlay'),start:$('startPanel'),end:$('endPanel'),effect:$('effect'),tip:$('tip'),sound:$('sound'),hint:$('bottomHint'),goal:$('goal'),stage:$('stage'),stagePanel:$('stagePanel'),intro:$('introPanel'),badgePanel:$('badgePanel')};
+const el={height:$('height'),score:$('score'),combo:$('combo'),time:$('time'),best:$('best'),level:$('level'),bar:$('timebar'),overlay:$('overlay'),start:$('startPanel'),end:$('endPanel'),effect:$('effect'),tip:$('tip'),sound:$('sound'),hint:$('bottomHint'),goal:$('goal'),stage:$('stage'),stagePanel:$('stagePanel'),intro:$('introPanel'),badgePanel:$('badgePanel'),rules:$('rulesPanel')};
 const remaining=()=>Math.max(0,Math.min(MAX_TIME-elapsed,RUN_CAP-totalPlayed));
 const isHurry=()=>!isStage()&&state==='playing'&&remaining()<HURRY;
 // オーバーレイに出すパネルを1つだけにする（null なら全部隠す）
 let menuShownAt=0;
-function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel])q.hidden=q!==p;el.overlay.hidden=!p}
+function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel,el.rules])q.hidden=q!==p;el.overlay.hidden=!p}
 const meters=()=>(stack.length-1)*FLOOR_M;
 function updateHud(){const next=LANDMARKS.find(([m])=>m>(state==='ready'?0:meters())),st=STAGES[stageIdx],stg=isStage()&&state!=='ready';
  el.goal.textContent=state==='ready'?'1段＝10m':state==='over'?meters()+'m ／ 住人'+residents+'人':stg?meters()+'m ／ ゴール：'+st.name+' '+st.m+'m':meters()+'m ／ '+(next?'次：'+next[1]+' '+next[0]+'m':'てっぺん！');
@@ -323,7 +331,7 @@ const fmtSec=n=>Math.round(n*10)/10;
 function warpBurst(){const m=moving;for(let i=0;i<14;i++){const t=Math.random()*Math.PI*2,v=1.5+Math.random()*2;sparks.push({x:m.x,y:m.y,z:m.z,vx:Math.cos(t)*v,vy:Math.random()*2,vz:Math.sin(t)*v,life:.4+Math.random()*.3,color:'#f0b3ff',size:.16})}}
 function confetti(b){for(let i=0;i<24;i++){const t=Math.random()*Math.PI*2;const speed=1+Math.random()*2.8;sparks.push({x:b.x+(Math.random()-.5)*b.w,y:b.y+H*.38,z:b.z+(Math.random()-.5)*b.d,vx:Math.cos(t)*speed,vy:1.8+Math.random()*3,vz:Math.sin(t)*speed,life:.5+Math.random()*.6,color:i%3===0?'#fff5bd':i%3===1?'#ffffff':'#97fff0'})}}
 function addFalling(x,z,w,d,y,color,dir,axis){if(w<=.003||d<=.003)return;falling.push({x,y,z,w,d,color,vx:axis==='x'?dir*1.9:(Math.random()-.5)*.5,vz:axis==='z'?dir*1.9:(Math.random()-.5)*.5,vy:.1,tilt:0,life:2.2})}
-function place(){if(state!=='playing'||!moving)return;const prev=stack[stack.length-1],axis=moving.axis,p=moving[axis],c=prev[axis],width=axis==='x'?'w':'d';let delta=p-c;const tolerance=.15;
+function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const prev=stack[stack.length-1],axis=moving.axis,p=moving[axis],c=prev[axis],width=axis==='x'?'w':'d';let delta=p-c;const tolerance=.15;
  // 得点の倍率は、いまは無し（最後に調整する）。磁石は判定が3倍ゆるい＝吸い付く
  const kind=moving.kind,wasWind=moving.wind,hurryNow=isHurry(),hStart=stack.length-1,isPerfect=Math.abs(delta)<=(kind==='magnet'?tolerance*3:tolerance);let block,title,color,detail,rocket=0;
  if(isPerfect){block={...moving,x:prev.x,z:prev.z,w:prev.w,d:prev.d,perfect:true};combo++;maxCombo=Math.max(maxCombo,combo);perfects++;
@@ -331,7 +339,7 @@ function place(){if(state!=='playing'||!moving)return;const prev=stack[stack.len
  const before=elapsed;elapsed=Math.max(MAX_TIME-TIME_CAP,elapsed-requestedTime);const gained=before-elapsed;bonusSeconds+=gained;
  title=kind==='magnet'?'MAGNET!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='magnet'?'#ff8a96':'#fff0a5';detail='+'+points+'点'+(gained>0?'  ＋'+fmtSec(gained)+'秒':'');
  // ロケット：PERFECTで置くと、同じ形のブロックが3段いっきに積み上がる
- if(kind==='gold')rocket=3;
+ if(kind==='gold')rocket=2;
  // ふくらむブロック：幅・奥行きを少し取り戻す
  if(kind==='grow'){block.w=Math.min(BASE,prev.w+.5);block.d=Math.min(BASE,prev.d+.5);title='ふくらんだ！';color='#6dff8e'}
  // お守り：4連続PERFECTごとに1つ（最大3つ）。気づきやすいよう見出しで知らせる
@@ -349,7 +357,7 @@ function place(){if(state!=='playing'||!moving)return;const prev=stack[stack.len
  addFalling(cx,cz,axis==='x'?cut:moving.w,axis==='z'?cut:moving.d,moving.y,moving.color,delta>0?1:-1,axis)}
  combo=0;const points=10;score+=points;const zap=kind==='thunder';title=zap?'ZAP!':'+'+points;color=zap?'#9fb4ff':'#cff4ff';detail=zap?'+'+points:'';beep(zap?'zap':'land')}
  delete block.axis;delete block.dir;delete block.speed;delete block.kind;delete block.wind;block.born=clock;stack.push(block);residents+=residentsOf(block);moving=null;
- if(rocket){for(let i=1;i<=rocket;i++){const nb={...block,y:block.y+i*H,born:clock+i*.13,appear:clock+i*.13,perfect:true};stack.push(nb);residents+=residentsOf(nb);confetti(nb)}
+ if(rocket){for(let i=1;i<=rocket;i++){const nb={...block,y:block.y+i*H,born:clock+i*.12,appear:clock+i*.12,perfect:true};stack.push(nb);residents+=residentsOf(nb);confetti(nb)}
   title='ROCKET!';color='#ffd34d';detail='+'+rocket+'段  '+detail;beep('rocket')}
  // 実在の建物の高さを超えたら、その名前を大きく表示
  const h=stack.length-1;
@@ -361,7 +369,7 @@ function place(){if(state!=='playing'||!moving)return;const prev=stack[stack.len
  camTarget=Math.max(1.8,(stack.length-5.5)*H+1.8);
  // ステージ：ゴールの高さに着いたらクリア（少し間をおいて結果へ）
  if(isStage()&&h>=goalFloors(stageIdx)){fx('STAGE CLEAR!','#7dffb0',STAGES[stageIdx].name+'に到達！');beep('landmark');state='ending';endsIn=1.1;endReason='clear';updateHud();return}
- fx(title,color,detail);newMoving();updateHud()}
+ fx(title,color,detail);newMoving();if(rocket&&moving)moving.appear=clock+.12*rocket+.18;updateHud()}
 // 動いているブロックを落とす（ミス・時間切れ共通）。お守りがあれば1回だけセーフ
 function dropMoving(msg){const m=moving;addFalling(m.x,m.z,m.w,m.d,m.y,m.color,m.dir,m.axis);moving=null;combo=0;
  if(charms>0){charms--;award('charm');fx('セーフ！','#b7ffe1','お守りを1つ使ったよ（のこり'+charms+'）');beep('land');newMoving();updateHud();return}
@@ -400,7 +408,7 @@ function playSound(kind,n){try{let t=audio.currentTime,notes=kind==='perfect'?sc
 function update(dt){clock+=dt;
  if(state==='playing'){if(!isStage()){elapsed=Math.min(MAX_TIME,elapsed+dt);totalPlayed+=dt}
   if(!isStage()&&(elapsed>=MAX_TIME||totalPlayed>=RUN_CAP)){finish('time')}
-  else if(moving){const step=moving.speed*windFactor()*dt;moving[moving.axis]+=moving.dir*step;moving.trip+=step;if(moving.kind==='warp'){if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=-MARGIN-1;warpBurst()}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=MARGIN+1;warpBurst()}}
+  else if(moving&&!(moving.appear>clock)){const step=moving.speed*windFactor()*dt;moving[moving.axis]+=moving.dir*step;moving.trip+=step;if(moving.kind==='warp'){if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=-MARGIN-1;warpBurst()}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=MARGIN+1;warpBurst()}}
    else if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=MARGIN+1;moving.dir=-1}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=-MARGIN-1;moving.dir=1}
    // ステージ：1往復して元の端に戻ったら時間切れで落ちる
    if(isStage()&&moving.trip>=TRIP)dropMoving('時間切れ！')}
@@ -412,7 +420,7 @@ function update(dt){clock+=dt;
  const camK=Math.min(1,dt*(viewing?1.6:4));camY+=(camTarget-camY)*camK;camDist+=(camDistT-camDist)*camK;camLift+=(camLiftT-camLift)*camK;camAz+=(camAzTarget-camAz)*Math.min(1,dt*3);
  for(const b of falling){b.x+=b.vx*dt;b.z+=b.vz*dt;b.vy-=13*dt;b.y+=b.vy*dt;b.life-=dt}falling=falling.filter(b=>b.life>0&&b.y>camY-17);
  // 特殊ブロックのまわりに粒を出し続ける（金＝舞い上がる／氷＝こぼれ落ちる／緑＝ふわっと）
- if(moving&&KINDS[moving.kind]&&KINDS[moving.kind].spark&&!viewing){sparkTimer-=dt;while(sparkTimer<0){sparkTimer+=.03;const m=moving,up=m.kind==='ice'?-.6:1.4+Math.random()*1.4;
+ if(moving&&KINDS[moving.kind]&&KINDS[moving.kind].spark&&!viewing&&!(moving.appear>clock)){sparkTimer-=dt;while(sparkTimer<0){sparkTimer+=.03;const m=moving,up=m.kind==='ice'?-.6:1.4+Math.random()*1.4;
   sparks.push({x:m.x+(Math.random()-.5)*m.w*1.1,y:m.y+(Math.random()-.5)*H,z:m.z+(Math.random()-.5)*m.d*1.1,vx:(Math.random()-.5)*.8,vy:up,vz:(Math.random()-.5)*.8,life:.45+Math.random()*.4,color:KINDS[m.kind].spark,size:.15})}}
  for(const s of sparks){s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;s.vy-=6*dt;s.life-=dt}sparks=sparks.filter(s=>s.life>0);
  // 風の筋：ブロックが動く線に沿って、風の向きに流れる（筋と同じ向きに動く時が速い）
@@ -449,12 +457,12 @@ function windows(b,eye){const a=Math.min(1,(clock-b.born)*2.5);if(a<=0)return;
  for(const s of [1,-1]){
   const fz=b.z+s*(b.d/2+t/2);if(s*(eye[2]-fz)>0)for(let i=0;i<nx;i++)box(b.x-b.w/2+b.w*(i+.5)/nx,b.y,fz,sx,wh,t,col,a,false);
   const fx_=b.x+s*(b.w/2+t/2);if(s*(eye[0]-fx_)>0)for(let i=0;i<nz;i++)box(fx_,b.y,b.z-b.d/2+b.d*(i+.5)/nz,t,wh,sz,col,a,false)}}
-function render(){faces=[];edges=[];boxRecords=[];
+function render(){faces=[];edges=[];facesT=[];edgesT=[];boxRecords=[];
  // A perspective camera circles the tower: geometry really has depth, not 2D isometric sprites.
  const eye=[Math.sin(camAz)*camDist,camY+camLift,Math.cos(camAz)*camDist];
  // Floating island & base pedestal, both genuine 3D cuboids.
  if(camY<8||viewing){box(0,-.55,0,8.6,.60,8.6,'#3c416e',1);box(0,-.20,0,8.15,.14,8.15,'#747fb5',1);box(0,-.11,0,5.75,.16,5.75,'#a5bce4',1)}
- for(const b of stack){if(b.appear&&clock<b.appear)continue;box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
+ for(const b of stack){if(b.appear&&clock<b.appear)continue;if(!viewing&&b.y<camY-16)continue;box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
  // 雲：てっぺんより下にだけ出す（動くブロックを隠さないように）。積むほど雲を突き抜けていく
  const topY=stack[stack.length-1].y;
  for(const c of CLOUDS){if(c.y>topY-.5||(!viewing&&Math.abs(c.y-camY)>14))continue;const a=c.a+clock*.04,x=Math.cos(a)*c.r,z=Math.sin(a)*c.r,s=c.s;
@@ -464,7 +472,7 @@ function render(){faces=[];edges=[];boxRecords=[];
  if(state!=='ready'&&isStage())frame((goalFloors(stageIdx)+1)*H,6.6,.11,'#7dffb0');
  else if(state!=='ready'&&bestHeight>0)frame((bestHeight+1)*H,6.2,.07,'#ffe08a');
  // 動くブロック：特殊ブロックは光る。ステージで1往復の残りが少ないと赤く点滅
- if(moving){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*10)+1)/2):moving.color;
+ if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*10)+1)/2):moving.color;
   const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/TRIP-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
   const ga=moving.kind==='ghost'?ghostAlpha():1;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:1);
   // 特殊ブロックの上面に、白いドット絵のマーク
@@ -478,7 +486,8 @@ function render(){faces=[];edges=[];boxRecords=[];
  const rectAspect=cv.width/cv.height;
  const look=[0,camY,0];const vp=m4mul(perspective(48*Math.PI/180,rectAspect,.1,400),lookAt(eye,look));
  if(!gl){drawFallback(vp,eye);return;}gl.uniformMatrix4fv(uVP,false,vp);
- gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);drawBuffer(faceBuffer,faces,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edges,gl.LINES)}
+ gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);drawBuffer(faceBuffer,faces,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edges,gl.LINES);
+ if(facesT.length||edgesT.length){gl.depthMask(false);gl.enable(gl.POLYGON_OFFSET_FILL);drawBuffer(faceBuffer,facesT,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edgesT,gl.LINES);gl.depthMask(true)}}
 function tick(t){let dt=Math.min((t-last)/1000||0,.04);last=t;
  // メニューが出ている間は、出てから2秒（落下中のブロックやカメラが落ち着くまで）で3D画面を止める＝タップの反応を軽くする
  const idle=!el.overlay.hidden&&(state==='ready'||state==='over')&&t-menuShownAt>2000;
@@ -551,9 +560,26 @@ function popLetter(g){g.classList.remove('drop','pop');g.style.animationDelay='0
   const sp=svgEl('rect',{x:b.x+b.width/2-s/2,y:b.y+b.height*.3,width:s,height:s,fill:cols[i%cols.length],class:'sp',style:`--dx:${(Math.cos(a)*r).toFixed(1)}px;--dy:${(Math.sin(a)*r).toFixed(1)}px;--r:${(Math.random()*180-90).toFixed(0)}deg`},svg);
   setTimeout(()=>sp.remove(),800)}}
 buildLogo();
+// ===== ルール説明ページ =====
+const KIND_INFO=[['gold','ロケット','PERFECTで置くと、同じ形のブロックが2段いっきに積み上がる'],['ice','氷','いつもより速く動く'],['grow','ふくらむ','PERFECTで置くと少し太くなる（細くなったときに出る）'],
+ ['magnet','磁石','近くで止めると吸い付いてPERFECTになる'],['warp','ワープ','往復しないで、端まで行くと反対の端から出てくる'],['ghost','おばけ','動いている途中で、ときどきフッと消える'],
+ ['thunder','雷','外すと、ずれの2倍けずれる'],['mini','ミニ','幅が半分ぐらいで来る']];
+// 特殊ブロックの小さなアイコン（色の四角に白いドット絵のマーク）
+function kindIcon(kind){const k=KINDS[kind],m=KIND_MARKS[kind],bg=kind==='ghost'?'#ece8ff':k.color,fg=kind==='ghost'?'#5b4a9a':kind==='ice'?'#3c9ccc':'#ffffff';let r='';
+ m.forEach((row,y)=>[...row].forEach((v,x)=>{if(v==='1')r+='<rect x="'+(1+x)+'" y="'+(1+y)+'" width=".9" height=".9" fill="'+fg+'"/>'}));
+ return '<svg viewBox="0 0 7 7"><rect width="7" height="7" fill="'+bg+'" stroke="#ffffff" stroke-opacity=".6" stroke-width=".3"/>'+r+'</svg>'}
+function openRules(){showPanel(el.rules);blockText($('rulesTitle'),'RULES');const body=$('rulesBody');if(body.dataset.done)return;body.dataset.done=1;
+ body.innerHTML='<h3>あそびかた</h3><p>動いているブロックをタップして、下のブロックに重ねよう。はみ出した分は切れて落ちる。全部はずすとミス。</p>'
+ +'<h3>PERFECT</h3><p>ぴったり重ねるとPERFECT。けずれない。続けるとドレミと音が上がる。</p>'
+ +'<h3>お守り</h3><p>4回続けてPERFECTで1つもらえる（最大3つ）。ミスや時間切れを1回だけ助けてくれる。</p>'
+ +'<h3>高さと住人</h3><p>1段＝10m。本物の建物の高さを超えると「○○超え！」。窓の数が住人の数。<b>太いまま高く積むほど住人がふえる。</b></p>'
+ +'<h3>ENDLESS（エンドレス）</h3><p>60秒の記録チャレンジ。PERFECTで時間がのびる（最大3分）。</p>'
+ +'<h3>STAGE（ステージ）</h3><p>建物の高さまで積めばクリア。ブロックは1往復するまでに置こう（赤く光ったら急いで！）。★はPERFECTの多さで決まる。</p>'
+ +'<h3>風</h3><p>10段ごとに風がふく。白い線と同じ向きに動くと速く、逆だと遅い。</p>'
+ +'<h3>特殊ブロック</h3>'+KIND_INFO.map(([k,n,t])=>'<div class="krow">'+kindIcon(k)+'<span><b>'+n+'</b>：'+t+'</span></div>').join('')}
 // 固定のボタン・ラベルをブロック文字に（日本語の小さい説明はモード選択だけ残す）
 setText($('startBtn'),'ENDLESS',['#2a2440'],{sub:'60秒の記録チャレンジ'});setText($('stageBtn'),'STAGE',['#2a2440'],{sub:'建物の高さまで積めばクリア'});
-setText($('badgeBtnStart'),'BADGES',['#eaf1ff']);setText($('introStart'),'START',['#2a2440']);setText($('introBack'),'BACK',['#eaf1ff']);setText($('badgeBack'),'BACK',['#eaf1ff']);
+setText($('badgeBtnStart'),'BADGES',['#eaf1ff']);setText($('rulesBtn'),'RULES',['#eaf1ff']);setText($('introStart'),'START',['#2a2440']);setText($('introBack'),'BACK',['#eaf1ff']);setText($('badgeBack'),'BACK',['#eaf1ff']);
 setText($('nextBtn'),'NEXT STAGE',['#2a2440']);setText($('againBtn'),'RETRY',['#2a2440']);setText($('viewBtn'),'VIEW',['#eaf1ff']);setText($('badgeBtnEnd'),'BADGES',['#eaf1ff']);setText($('menuBtn'),'MENU',['#eaf1ff']);
 setText($('restart'),'RESTART',['#eaf1ff']);setText($('rotate'),'CAMERA',['#eaf1ff']);
 setText($('lblBest'),'BEST SCORE',['#becae2'],{flat:1});setText($('lblHeight'),'HEIGHT',['#becae2'],{flat:1});setText($('lblScore'),'SCORE',['#becae2'],{flat:1});setText($('lblCombo'),'COMBO',['#becae2'],{flat:1});
@@ -566,12 +592,13 @@ $('startBtn').addEventListener('click',()=>startGame('endless'));$('againBtn').a
 $('stageBtn').addEventListener('click',openStages);$('stageBack').addEventListener('click',()=>showPanel(el.start));
 $('introStart').addEventListener('click',()=>startGame('stage',stageIdx));$('introBack').addEventListener('click',openStages);
 $('nextBtn').addEventListener('click',()=>{reset(true);openIntro(stageIdx+1)});
-$('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);if(wasStage)openStages()});$('restart').addEventListener('click',()=>reset(false));$('viewBtn').addEventListener('click',viewTower);
+$('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);if(wasStage)openStages()});$('restart').addEventListener('click',()=>{if(state==='ready')return;reset(false)});$('viewBtn').addEventListener('click',viewTower);
 $('badgeBtnStart').addEventListener('click',()=>openBadges(el.start));$('badgeBtnEnd').addEventListener('click',()=>openBadges(el.end));$('badgeBack').addEventListener('click',closeBadges);
+$('rulesBtn').addEventListener('click',openRules);$('rulesBack').addEventListener('click',()=>showPanel(el.start));
 $('rotate').addEventListener('click',()=>{angleChoice=(angleChoice+1)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice])});
 $('sound').addEventListener('click',()=>{soundOn=!soundOn;write('pittariTower3D.sound',soundOn?'on':'off');setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));if(soundOn)beep('land')});
 cv.addEventListener('pointerdown',e=>{e.preventDefault();if(viewing)closeView();else place()},{passive:false});
-document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
+document.addEventListener('keydown',e=>{if(e.code==='KeyR'&&state!=='ready'){reset(false);return}if(e.code==='KeyC'||e.code==='ArrowLeft'||e.code==='ArrowRight'){$('rotate').click();return}if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
 document.addEventListener('visibilitychange',()=>{last=0});setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));reset(true);requestAnimationFrame(tick);
 })();
 </script>

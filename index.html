@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.1">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.1">
-<link rel="manifest" href="manifest.webmanifest?v=0.20.1">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.2">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.2">
+<link rel="manifest" href="manifest.webmanifest?v=0.20.2">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -24,8 +24,9 @@ h1 em{font-style:normal;color:#ffe9aa}.chip3d{display:inline-block;vertical-alig
 .best small{display:block;font-size:10px;letter-spacing:.12em;color:#acc0e1;font-weight:800}
 .best strong{font-size:22px;font-weight:1000;font-variant-numeric:tabular-nums}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:11px}
-.stat{background:#2833529e;border:1px solid #536181;border-radius:13px;text-align:center;padding:8px 4px 7px}
+.stat{position:relative;background:#2833529e;border:1px solid #536181;border-radius:13px;text-align:center;padding:8px 4px 7px}
 .stat small{display:block;color:#becae2;font-size:10px;font-weight:800;margin-bottom:1px}
+.plus{position:absolute;left:0;right:0;top:calc(100% - 4px);z-index:5;font-size:13px;font-weight:1000;color:#fff0a6;text-shadow:0 2px 6px #10183a;opacity:0;pointer-events:none}.plus.show{animation:plusUp .75s ease-out both}@keyframes plusUp{0%{opacity:0;transform:translateY(6px)}20%{opacity:1;transform:translateY(0)}70%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
 .stat strong{display:block;font-size:23px;line-height:1.12;font-variant-numeric:tabular-nums;font-weight:1000}
 .stat:nth-child(3) strong{color:#ffe49e}.stat:nth-child(4) strong{color:#9fe9e7}.stat.bonus-flash{animation:timeFlash .65s ease-out}@keyframes timeFlash{30%{background:#2c816b;border-color:#b0ffca;box-shadow:0 0 22px #69ffae66}100%{background:#2833529e}}
 .stage{position:relative;overflow:hidden;border-radius:22px;isolation:isolate;border:2px solid #8897ce;box-shadow:0 18px 45px #04081d82,inset 0 0 28px #9ec6ff2a;touch-action:manipulation;user-select:none;-webkit-user-select:none;background:radial-gradient(ellipse 65% 30% at 52% 30%,#7086cd56,transparent 75%),linear-gradient(165deg,#334985 0%,#3e448a 43%,#7775ad 78%,#b7aac5 100%)}
@@ -127,7 +128,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 <body>
 <main class="wrap">
   <header><div><div class="eyebrow">MINI GAME 01 · <span id="ver"></span></div><h1>Tip Top <em>Tower</em></h1></div><div class="best"><small id="lblBest">BEST SCORE</small><strong id="best">0</strong></div></header>
-  <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
+  <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong><span class="plus" id="scorePlus"></span></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
   <section class="stage" id="stage" aria-label="3Dブロック積みゲーム">
     <canvas id="game" width="720" height="1000" aria-label="画面タップで移動中の3Dブロックを落とす" tabindex="0"></canvas>
     <div class="bar"><div id="timebar"></div><div id="timebar2"></div></div>
@@ -149,7 +150,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.20.1';
+const VERSION='v0.20.2';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -285,6 +286,8 @@ const CHAPTER_THEMES=[['パステル','木','方眼紙','レトロゲーム'],['
 const goalFloors=i=>Math.ceil(STAGES[i].m/FLOOR_M);
 // 1往復の長さ：端から反対の端へ行って戻るまで
 const TRIP=4*(MARGIN+1);
+// ステージの時間切れの目安（バーと赤い点滅用）：2回目にタワーの上を通りすぎるあたり
+function tripLimit(){if(!moving)return TRIP;const pv=stack[stack.length-1],wk=moving.axis==='x'?'w':'d';return Math.min(TRIP,TRIP*.75+(moving[wk]+pv[wk])/2+.6)}
 const windowsFor=w=>Math.max(1,Math.min(5,Math.floor(w/.9)));
 const residentsOf=b=>windowsFor(b.w)+windowsFor(b.d);
 // 普通のブロックの色。特殊ブロック（金＝黄・氷＝水色・緑）と見分けやすいよう、似た色は使わない
@@ -358,7 +361,7 @@ function updateHud(){const next=LANDMARKS.find(([m])=>m>(state==='ready'?0:meter
  const hu=isHurry();if(el.time._hu!==hu){el.time._hu=hu;el.time.parentElement.classList.toggle('hurry',hu)}
  // ステージ：時間の代わりに「ゴールまでのこり段」、上のバーは1往復の残り
  setText($('timeLabel'),stg?'LEFT':'TIME',['#becae2'],{flat:1});setV(el.time,stg?Math.max(0,goalFloors(stageIdx)-(stack.length-1)):Math.ceil(remaining()));
- const rem=remaining(),bw=(stg?(moving?100*Math.max(0,1-moving.trip/TRIP):0):Math.min(100,100*rem/MAX_TIME)).toFixed(1)+'%',
+ const rem=remaining(),bw=(stg?(moving?100*Math.max(0,1-moving.trip/tripLimit()):0):Math.min(100,100*rem/MAX_TIME)).toFixed(1)+'%',
   bw2=(!stg&&rem>MAX_TIME?100*Math.min(1,(rem-MAX_TIME)/(TIME_CAP-MAX_TIME)):0).toFixed(1)+'%';// R18：60秒を超えた分は金色
  if(el.bar._w!==bw){el.bar._w=bw;el.bar.style.width=bw}if(el.bar2._w!==bw2){el.bar2._w=bw2;el.bar2.style.width=bw2}
  setV(el.height,state==='ready'?0:stack.length-1);setV(el.score,score);setV(el.combo,combo);setV(el.best,best);setV(el.level,(stg?'STAGE '+(stageIdx+1):'LV '+(state==='ready'?1:stack.length))+(charms?' ・ お守り'+charms:''))}
@@ -412,6 +415,8 @@ let badgeFrom=null;
 function openBadges(from){badgeFrom=from;from.hidden=true;$('badgePanel').hidden=false;blockText($('badgeTitle'),'BADGES');$('badgeCount').textContent='あつめたバッジ '+badges.size+' / '+BADGES.length;
  $('badgeGrid').innerHTML=BADGES.map(([id,icon,name,how])=>{const got=badges.has(id);return '<div class="bitem'+(got?'':' locked')+(newBadges.includes(id)?' new':'')+'"><i>'+(got?icon:'？')+'</i>'+(got?name:how)+'</div>'}).join('')}
 function closeBadges(){$('badgePanel').hidden=true;if(badgeFrom)badgeFrom.hidden=false}
+// 置いたときの点数：タワーではなく、上の SCORE 欄のそばに小さく出す
+function plusScore(n){const e=$('scorePlus');e.textContent='+'+n;e.classList.remove('show');void e.offsetWidth;e.classList.add('show')}
 function fx(message,col='#fff0a5',detail=''){ setText($('effect-title'),message.replace('×','X'),[col]); $('effect-detail').textContent=detail;el.effect.style.color=col;el.effect.classList.remove('show');void el.effect.offsetWidth;el.effect.classList.add('show')}
 function flashTime(){const stat=el.time.parentElement;stat.classList.remove('bonus-flash');void stat.offsetWidth;stat.classList.add('bonus-flash')}
 const fmtSec=n=>Math.round(n*10)/10;
@@ -427,9 +432,9 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  // 得点の倍率は、いまは無し（最後に調整する）。磁石は判定が3倍ゆるい＝吸い付く
  const kind=moving.kind,wasWind=moving.wind,hurryNow=isHurry(),hStart=stack.length-1,isPerfect=Math.abs(delta)<=(kind==='magnet'?tolerance*3:tolerance);let block,title,color,detail,rocket=0;
  if(isPerfect){block={...moving,x:prev.x,z:prev.z,w:prev.w,d:prev.d,perfect:true};combo++;maxCombo=Math.max(maxCombo,combo);perfects++;
- const points=20+Math.min(4,combo-1)*10,requestedTime=isStage()?0:1+Math.min(2,combo-1);score+=points;
+ const points=20+Math.min(4,combo-1)*10,requestedTime=isStage()?0:1+Math.min(2,combo-1);score+=points;plusScore(points);
  const before=elapsed;elapsed=Math.max(MAX_TIME-TIME_CAP,elapsed-requestedTime);const gained=before-elapsed;bonusSeconds+=gained;
- title=kind==='magnet'?'MAGNET!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='magnet'?'#ff8a96':'#fff0a5';detail='+'+points+'点'+(gained>0?'  ＋'+fmtSec(gained)+'秒':'');
+ title=kind==='magnet'?'MAGNET!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='magnet'?'#ff8a96':'#fff0a5';detail=gained>0?'＋'+fmtSec(gained)+'秒':'';// 点数はタワーの上ではなく SCORE 欄のそばに出す（plusScore）
  // ロケット：PERFECTで置くと、同じ形のブロックがさらに2段いっきに積み上がる（1回で3段＝30m）
  if(kind==='gold')rocket=2;
  // ふくらむブロック：幅・奥行きを少し取り戻す
@@ -450,7 +455,7 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  if(cut>.002){const cutCenter=delta>0?right0+cut/2:left0-cut/2;let cx=moving.x,cz=moving.z;if(axis==='x')cx=cutCenter;else cz=cutCenter;
  addFalling(cx,cz,axis==='x'?cut:moving.w,axis==='z'?cut:moving.d,moving.y,moving.color,delta>0?1:-1,axis)}
  if(kind==='thunder')burnSparks(axis,delta>0?right:left0,delta>0?right0:left,block);
- combo=0;const points=10;score+=points;const zap=kind==='thunder';title=zap?'ZAP!':'+'+points;color=zap?'#ffe066':'#cff4ff';detail=zap?'+'+points:'';beep(zap?'zap':'land')}
+ combo=0;const points=10;score+=points;plusScore(points);const zap=kind==='thunder';title=zap?'ZAP!':'';color=zap?'#ffe066':'#cff4ff';detail='';beep(zap?'zap':'land')}
  delete block.axis;delete block.dir;delete block.speed;delete block.kind;delete block.wind;block.born=clock;stack.push(block);residents+=residentsOf(block);moving=null;
  if(rocket){for(let i=1;i<=rocket;i++){const nb={...block,y:block.y+i*H,born:clock+i*.12,appear:clock+i*.12,perfect:true};stack.push(nb);residents+=residentsOf(nb);confetti(nb)}
   perfects+=rocket;// レビュー2回目-2：★判定（PERFECT率＝PERFECT回数÷段数）がロケットで下がらないように
@@ -460,12 +465,12 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  for(const [id,m] of [['h10',100],['tokyo',333],['sky',634],['burj',828]])if(h*FLOOR_M>=m)award(id);
  if(residents>=300)award('r300');
  const lm=LANDMARKS.filter(([m])=>m>hStart*FLOOR_M&&m<=h*FLOOR_M).pop();
- if(lm){detail=h*FLOOR_M+'m到達！  '+title+(detail?' '+detail:'');title=lm[1]+' 超え！';color='#a8f0ff';beep('landmark')}
+ if(lm){detail=h*FLOOR_M+'m到達！'+(title?'  '+title:'')+(detail?' '+detail:'');title=lm[1]+' 超え！';color='#a8f0ff';beep('landmark')}
  else if(!isStage()&&bestHeight>0&&hStart<=bestHeight&&h>bestHeight){detail=title+(detail?' '+detail:'');title='自己ベスト超え！';color='#ffe08a';beep('landmark')}
  camTarget=Math.max(1.8,(stack.length-5.5)*H+1.8);
  // ステージ：ゴールの高さに着いたらクリア（少し間をおいて結果へ）
  if(isStage()&&h>=goalFloors(stageIdx)){fx('STAGE CLEAR!','#7dffb0',STAGES[stageIdx].name+'に到達！');beep('landmark');state='ending';endsIn=1.1;endReason='clear';updateHud();return}
- fx(title,color,detail);newMoving();if(rocket&&moving)moving.appear=clock+.12*rocket+.18;updateHud()}
+ if(title)fx(title,color,detail);newMoving();if(rocket&&moving)moving.appear=clock+.12*rocket+.18;updateHud()}
 // 動いているブロックを落とす（ミス・時間切れ共通）。お守りがあれば1回だけセーフ
 function dropMoving(msg){missCount++;/* R02 */const m=moving;addFalling(m.x,m.z,m.w,m.d,m.y,m.color,m.dir,m.axis);moving=null;combo=0;
  if(charms>0){charms--;award('charm');fx('セーフ！','#b7ffe1','お守りを1つ使ったよ（のこり'+charms+'）');beep('land');newMoving();updateHud();return}
@@ -507,7 +512,10 @@ function update(dt,rdt=dt){clock+=dt;
   else if(moving&&!(moving.appear>clock)){const step=moving.speed*windFactor()*dt;moving[moving.axis]+=moving.dir*step;moving.trip+=step;if(moving.kind==='warp'){if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=-MARGIN-1;warpBurst()}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=MARGIN+1;warpBurst()}}
    else if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=MARGIN+1;moving.dir=-1}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=-MARGIN-1;moving.dir=1}
    // ステージ：1往復して元の端に戻ったら時間切れで落ちる
-   if(isStage()&&moving.trip>=TRIP)dropMoving('時間切れ！')}
+   // 2回目の通過（往復の後半）で、タワーと重ならない所まで通りすぎたら、0.15秒後に時間切れ
+   if(isStage()&&moving){const pv=stack[stack.length-1],ax=moving.axis,wk=ax==='x'?'w':'d',dl=moving[ax]-pv[ax];
+    if(moving.trip>TRIP*.6&&Math.abs(dl)>=(moving[wk]+pv[wk])/2&&Math.sign(dl)===moving.dir)moving.past=(moving.past||0)+dt;
+    if(moving.past>=.15||moving.trip>=TRIP)dropMoving('時間切れ！')}}
   updateHud()}
  if(state==='ready'&&moving){moving[moving.axis]+=moving.dir*moving.speed*dt;if(Math.abs(moving[moving.axis])>MARGIN+1){moving[moving.axis]=Math.sign(moving[moving.axis])*(MARGIN+1);moving.dir*=-1}}
  if(state==='ending'){endsIn-=dt;if(endsIn<=0)finish(endReason)}
@@ -573,7 +581,7 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  else if(state!=='ready'&&bestHeight>0)frame((bestHeight+1)*H,6.2,.07,'#ffe08a');
  // 動くブロック：特殊ブロックは光る。ステージで1往復の残りが少ないと赤く点滅
  if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*(moving.kind==='thunder'?28:10))+1)/2):moving.color;
-  const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/TRIP-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
+  const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/tripLimit()-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
   const ga=moving.kind==='ghost'?ghostAlpha():1;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:1);
   // ミニ：PERFECTで戻る「元の大きさ」を白い枠で見せる。この枠を下の段にぴったり重ねるつもりでタップすればよい
   if(moving.kind==='mini'){const pv=stack[stack.length-1];box(moving.x,moving.y,moving.z,pv.w,H*.96,pv.d,'#ffffff',.26+.1*Math.sin(clock*6))}
@@ -688,7 +696,7 @@ function openRules(){showPanel(el.rules);blockText($('rulesTitle'),'RULES');cons
  +'<h3>お守り</h3><p>4回続けてPERFECTで1つもらえる（最大3つ）。ミスや時間切れを1回だけ助けてくれる。</p>'
  +'<h3>高さと住人</h3><p>1段＝10m。本物の建物の高さを超えると「○○超え！」。窓の数が住人の数。<b>太いまま高く積むほど住人がふえる。</b></p>'
  +'<h3>ENDLESS（エンドレス）</h3><p>60秒の記録チャレンジ。PERFECTで時間がのびる（最大3分）。</p>'
- +'<h3>STAGE（ステージ）</h3><p>建物の高さまで積めばクリア。ブロックは1往復するまでに置こう（赤く光ったら急いで！）。★はPERFECTの多さで決まる。</p>'
+ +'<h3>STAGE（ステージ）</h3><p>建物の高さまで積めばクリア。ブロックは1往復するまでに置こう。2回目にタワーの上を通りすぎたら時間切れ（赤く光ったら急いで！）。★はPERFECTの多さで決まる。</p>'
  +'<h3>風</h3><p>10段ごとに風がふく。白い線と同じ向きに動くと速く、逆だと遅い。</p>'
  +'<h3>特殊ブロック</h3>'+KIND_INFO.map(([k,n,t])=>'<div class="krow">'+kindIcon(k)+'<span><b>'+n+'</b>：'+t+'</span></div>').join('')}
 // 固定のボタン・ラベルをブロック文字に（日本語の小さい説明はモード選択だけ残す）

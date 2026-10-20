@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.17.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.17.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.17.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.17.1">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.17.1">
+<link rel="manifest" href="manifest.webmanifest?v=0.17.1">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -147,7 +147,20 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.17.0';
+const VERSION='v0.17.1';
+/* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
+  ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
+  ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
+     半透明のものだけ gl.depthMask(false)（奥行きを書き込まない）で2回目に描く。
+  ③ 毎フレームの巨大な配列・Float32Array の作り直し → 一部対応（v0.17.0）。Float32Array は使い回し、
+     画面より下（カメラより16以上下）の階は描かない。faces 配列そのものの作り直しは残している
+     （今の段数・窓の数では問題が出ていないため。100段超えでカクつくようなら作り置き方式に変える）。
+  ④ ふくらむブロックが前のブロックの中心のまま太くなり、土台からはみ出すことがある → 仕様どおり（変更なし）。
+     端に寄ったまま太くなるのも遊びの面白さとして残す。
+  ⑤ CSS の古い指定（丸角時代）と新しいブロック風の指定が重なっている → 見送り。整理すると見た目が崩れる
+     危険があるので、次に画面デザインを大きく変えるときにまとめて整理する。
+  ⑥ キーボード操作 → 対応（v0.17.0）。R＝やり直し、C／←→＝視点変更（Space／Enter＝置く・スタートは従来どおり）。
+*/
 const $=id=>document.getElementById(id);const cv=$('game');$('ver').textContent=VERSION;
 const gl=cv.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:false})||cv.getContext('experimental-webgl',{antialias:true,alpha:true});
 const fallbackCtx=gl?null:cv.getContext('2d');
@@ -170,13 +183,13 @@ const LANDMARKS=[[15,'奈良の大仏'],[93,'自由の女神'],[120,'牛久大�
 const SCALE=[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5];
 // 特殊ブロック：色（alt と交互に光る）・まわりに出る粒の色
 const KINDS={
- gold:{color:'#ffcc33',alt:'#fff6c2',spark:'#fff3a0'},   // ロケット：PERFECTで3段いっきに積み上がる
- ice:{color:'#e6f9ff',alt:'#7fd4ff',spark:'#ffffff'},    // 氷：速く動く
+ gold:{color:'#2f7bff',alt:'#cfe2ff',spark:'#ffb347'},   // ロケット（青）：PERFECTで2段いっきに積み上がる。粒はオレンジの噴射炎（下へ吹き出す）
+ ice:{color:'#e6f9ff',alt:'#7fd4ff',spark:'#ffffff',mark:'#3c9ccc'},// 氷（白っぽい水色）：速く動く。白いマークは見えにくいので水色
  grow:{color:'#6dff8e',alt:'#d2ffdc',spark:'#b9ffc9'},   // ふくらむ：PERFECTで太くなる
  magnet:{color:'#ff4d5e',alt:'#ffd0d6',spark:'#ffb3bc'}, // 磁石：近くで止めると吸い付いてPERFECT
- warp:{color:'#e05bff',alt:'#f7d6ff',spark:'#f0b3ff'},   // ワープ：端まで行くと反対の端から出てくる
- ghost:{color:'#ffffff',alt:'#d9d2ff',spark:''},         // おばけ：ときどきフッと消える
- thunder:{color:'#3d6bff',alt:'#c9d6ff',spark:'#e8f0ff'},// 雷：外すと、ずれの2倍削れる
+ warp:{color:'#8a4dff',alt:'#e2d0ff',spark:'#d6b8ff'},   // ワープ（紫）：端まで行くと反対の端から出てくる
+ ghost:{color:'#ffffff',alt:'#d9d2ff',spark:'',mark:'#5b4a9a'},// おばけ（半透明の白）：ときどきフッと消える
+ thunder:{color:'#ffd400',alt:'#fff6a8',spark:'#fffbe0',mark:'#2b2440'},// 雷（黄色）：外すと、ずれの2倍削れる。速く点滅してビリビリ。マークは濃い色
  mini:{color:'#ff9a3c',alt:'#ffe0bf',spark:'#ffd2a3'}};  // ミニ：幅が半分ぐらいで来る
 const CHARM_EVERY=4,WIND_EVERY=10;
 const KIND_MARKS={gold:['00100','01110','11111','00100','00100'],ice:['10101','01110','11011','01110','10101'],grow:['00100','00100','11111','00100','00100'],
@@ -200,7 +213,7 @@ const BADGES=[['h10','🏠','はじめの一歩','100mまで積む'],['tokyo','�
 // ステージモード：ゴールは実在の建物。1ステージに1つずつ新しい仕掛けが登場する
 const STAGES=[
  {name:'自由の女神',m:93,kinds:[],wind:false,intro:'まずは練習！\nブロックは1往復するまでに置こう。\n赤く光ったら急いで！'},
- {name:'牛久大仏',m:120,kinds:['gold'],wind:false,first:'gold',intro:'新登場：ロケットブロック\n金色のブロックをPERFECTで置くと、3段いっきに積み上がる！'},
+ {name:'牛久大仏',m:120,kinds:['gold'],wind:false,first:'gold',intro:'新登場：ロケットブロック\n青いブロックをPERFECTで置くと、2段いっきに積み上がる！'},
  {name:'東京都庁',m:243,kinds:['gold','ice'],wind:false,first:'ice',intro:'新登場：氷ブロック\n水色の氷ブロックは、いつもより速く動く'},
  {name:'あべのハルカス',m:300,kinds:['gold','ice','grow'],wind:false,first:'grow',intro:'新登場：ふくらむブロック\n緑のブロックをPERFECTで置くと太くなる'},
  {name:'東京タワー',m:333,kinds:['gold','ice','grow'],wind:true,intro:'新登場：風\n10段ごとに風がふく。\n白い線と同じ向きに動くと速く、逆だと遅い'}];
@@ -247,6 +260,7 @@ function box(x,y,z,w,h,d,color,alpha=1,drawEdges=true){if(w<=.003||h<=.003||d<=.
  for(const [ind,shade] of fdefs){for(const i of [0,1,2,0,2,3]){F.push(...p[ind[i]],...col.map(c=>Math.min(1,c*shade)),alpha)}}
  if(drawEdges){const pairs=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(const [a,b]of pairs){const ec=theme.edge;E.push(...p[a],...ec,alpha*theme.edgeA,...p[b],...ec,alpha*theme.edgeA)}}
 }
+// レビュー③：描画用の Float32Array は毎フレーム作らず使い回す（足りないときだけ1.5倍に広げる）
 let f32=new Float32Array(1<<16);
 function drawBuffer(buffer,items,mode){if(!items.length)return;if(f32.length<items.length)f32=new Float32Array(Math.ceil(items.length*1.5));f32.set(items);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,f32.subarray(0,items.length),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(aColor,4,gl.FLOAT,false,28,12);gl.enableVertexAttribArray(aPosition);gl.enableVertexAttribArray(aColor);gl.drawArrays(mode,0,items.length/7)}
 const read=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch{return d}};const write=(k,v)=>{try{localStorage.setItem(k,String(v))}catch{}};
@@ -341,6 +355,7 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  // ロケット：PERFECTで置くと、同じ形のブロックが3段いっきに積み上がる
  if(kind==='gold')rocket=2;
  // ふくらむブロック：幅・奥行きを少し取り戻す
+ // レビュー④：中心は前のブロックのまま太くなる（土台からはみ出すこともあるが仕様）
  if(kind==='grow'){block.w=Math.min(BASE,prev.w+.5);block.d=Math.min(BASE,prev.d+.5);title='ふくらんだ！';color='#6dff8e'}
  // お守り：4連続PERFECTごとに1つ（最大3つ）。気づきやすいよう見出しで知らせる
  if(combo%CHARM_EVERY===0&&charms<MAX_CHARMS){charms++;detail=title+'  '+detail;title='お守りゲット！';color='#ff9ad5';beep('charm')}
@@ -355,10 +370,10 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  const cut=moving[width]-overlap;
  if(cut>.002){const cutCenter=delta>0?right+cut/2:left-cut/2;let cx=moving.x,cz=moving.z;if(axis==='x')cx=cutCenter;else cz=cutCenter;
  addFalling(cx,cz,axis==='x'?cut:moving.w,axis==='z'?cut:moving.d,moving.y,moving.color,delta>0?1:-1,axis)}
- combo=0;const points=10;score+=points;const zap=kind==='thunder';title=zap?'ZAP!':'+'+points;color=zap?'#9fb4ff':'#cff4ff';detail=zap?'+'+points:'';beep(zap?'zap':'land')}
+ combo=0;const points=10;score+=points;const zap=kind==='thunder';title=zap?'ZAP!':'+'+points;color=zap?'#ffe066':'#cff4ff';detail=zap?'+'+points:'';beep(zap?'zap':'land')}
  delete block.axis;delete block.dir;delete block.speed;delete block.kind;delete block.wind;block.born=clock;stack.push(block);residents+=residentsOf(block);moving=null;
  if(rocket){for(let i=1;i<=rocket;i++){const nb={...block,y:block.y+i*H,born:clock+i*.12,appear:clock+i*.12,perfect:true};stack.push(nb);residents+=residentsOf(nb);confetti(nb)}
-  title='ROCKET!';color='#ffd34d';detail='+'+rocket+'段  '+detail;beep('rocket')}
+  title='ROCKET!';color='#8fc2ff';detail='+'+rocket+'段  '+detail;beep('rocket')}
  // 実在の建物の高さを超えたら、その名前を大きく表示
  const h=stack.length-1;
  for(const [id,m] of [['h10',100],['tokyo',333],['sky',634],['burj',828]])if(h*FLOOR_M>=m)award(id);
@@ -420,7 +435,7 @@ function update(dt){clock+=dt;
  const camK=Math.min(1,dt*(viewing?1.6:4));camY+=(camTarget-camY)*camK;camDist+=(camDistT-camDist)*camK;camLift+=(camLiftT-camLift)*camK;camAz+=(camAzTarget-camAz)*Math.min(1,dt*3);
  for(const b of falling){b.x+=b.vx*dt;b.z+=b.vz*dt;b.vy-=13*dt;b.y+=b.vy*dt;b.life-=dt}falling=falling.filter(b=>b.life>0&&b.y>camY-17);
  // 特殊ブロックのまわりに粒を出し続ける（金＝舞い上がる／氷＝こぼれ落ちる／緑＝ふわっと）
- if(moving&&KINDS[moving.kind]&&KINDS[moving.kind].spark&&!viewing&&!(moving.appear>clock)){sparkTimer-=dt;while(sparkTimer<0){sparkTimer+=.03;const m=moving,up=m.kind==='ice'?-.6:1.4+Math.random()*1.4;
+ if(moving&&KINDS[moving.kind]&&KINDS[moving.kind].spark&&!viewing&&!(moving.appear>clock)){sparkTimer-=dt;while(sparkTimer<0){sparkTimer+=.03;const m=moving,up=m.kind==='ice'?-.6:m.kind==='gold'?-1.6-Math.random():1.4+Math.random()*1.4;
   sparks.push({x:m.x+(Math.random()-.5)*m.w*1.1,y:m.y+(Math.random()-.5)*H,z:m.z+(Math.random()-.5)*m.d*1.1,vx:(Math.random()-.5)*.8,vy:up,vz:(Math.random()-.5)*.8,life:.45+Math.random()*.4,color:KINDS[m.kind].spark,size:.15})}}
  for(const s of sparks){s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;s.vy-=6*dt;s.life-=dt}sparks=sparks.filter(s=>s.life>0);
  // 風の筋：ブロックが動く線に沿って、風の向きに流れる（筋と同じ向きに動く時が速い）
@@ -462,7 +477,7 @@ function render(){faces=[];edges=[];facesT=[];edgesT=[];boxRecords=[];
  const eye=[Math.sin(camAz)*camDist,camY+camLift,Math.cos(camAz)*camDist];
  // Floating island & base pedestal, both genuine 3D cuboids.
  if(camY<8||viewing){box(0,-.55,0,8.6,.60,8.6,'#3c416e',1);box(0,-.20,0,8.15,.14,8.15,'#747fb5',1);box(0,-.11,0,5.75,.16,5.75,'#a5bce4',1)}
- for(const b of stack){if(b.appear&&clock<b.appear)continue;if(!viewing&&b.y<camY-16)continue;box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
+ for(const b of stack){if(b.appear&&clock<b.appear)continue;if(!viewing&&b.y<camY-16)continue;/* レビュー③：画面より下の階は描かない */box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
  // 雲：てっぺんより下にだけ出す（動くブロックを隠さないように）。積むほど雲を突き抜けていく
  const topY=stack[stack.length-1].y;
  for(const c of CLOUDS){if(c.y>topY-.5||(!viewing&&Math.abs(c.y-camY)>14))continue;const a=c.a+clock*.04,x=Math.cos(a)*c.r,z=Math.sin(a)*c.r,s=c.s;
@@ -472,12 +487,12 @@ function render(){faces=[];edges=[];facesT=[];edgesT=[];boxRecords=[];
  if(state!=='ready'&&isStage())frame((goalFloors(stageIdx)+1)*H,6.6,.11,'#7dffb0');
  else if(state!=='ready'&&bestHeight>0)frame((bestHeight+1)*H,6.2,.07,'#ffe08a');
  // 動くブロック：特殊ブロックは光る。ステージで1往復の残りが少ないと赤く点滅
- if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*10)+1)/2):moving.color;
+ if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*(moving.kind==='thunder'?28:10))+1)/2):moving.color;
   const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/TRIP-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
   const ga=moving.kind==='ghost'?ghostAlpha():1;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:1);
   // 特殊ブロックの上面に、白いドット絵のマーク
   const mk=KIND_MARKS[moving.kind];if(mk&&ga>.02){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.035;
-   mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,moving.kind==='ghost'?'#5b4a9a':'#ffffff',ga,false)}))}}
+   mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,(KINDS[moving.kind].mark||'#ffffff'),ga,false)}))}}
  // お守り：持っている数だけ、動くブロックより上でピンクのキューブが小さく回る
  if(charms>0&&!viewing){const top=stack[stack.length-1];for(let i=0;i<charms;i++){const a=clock*1.8+i*Math.PI*2/charms;box(Math.cos(a)*1.6,top.y+H*4.2+Math.sin(clock*3+i)*.12,Math.sin(a)*1.6,.34,.34,.34,'#ff8fd0',1)}}
  for(const b of falling){box(b.x,b.y,b.z,b.w,H,b.d,b.color,Math.min(1,b.life/.5))}
@@ -487,6 +502,7 @@ function render(){faces=[];edges=[];facesT=[];edgesT=[];boxRecords=[];
  const look=[0,camY,0];const vp=m4mul(perspective(48*Math.PI/180,rectAspect,.1,400),lookAt(eye,look));
  if(!gl){drawFallback(vp,eye);return;}gl.uniformMatrix4fv(uVP,false,vp);
  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);drawBuffer(faceBuffer,faces,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edges,gl.LINES);
+ // レビュー②：半透明のものは不透明なものの後に、奥行きを書き込まずに描く（後ろのブロックが抜けて見えないように）
  if(facesT.length||edgesT.length){gl.depthMask(false);gl.enable(gl.POLYGON_OFFSET_FILL);drawBuffer(faceBuffer,facesT,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edgesT,gl.LINES);gl.depthMask(true)}}
 function tick(t){let dt=Math.min((t-last)/1000||0,.04);last=t;
  // メニューが出ている間は、出てから2秒（落下中のブロックやカメラが落ち着くまで）で3D画面を止める＝タップの反応を軽くする
@@ -565,7 +581,7 @@ const KIND_INFO=[['gold','ロケット','PERFECTで置くと、同じ形のブ�
  ['magnet','磁石','近くで止めると吸い付いてPERFECTになる'],['warp','ワープ','往復しないで、端まで行くと反対の端から出てくる'],['ghost','おばけ','動いている途中で、ときどきフッと消える'],
  ['thunder','雷','外すと、ずれの2倍けずれる'],['mini','ミニ','幅が半分ぐらいで来る']];
 // 特殊ブロックの小さなアイコン（色の四角に白いドット絵のマーク）
-function kindIcon(kind){const k=KINDS[kind],m=KIND_MARKS[kind],bg=kind==='ghost'?'#ece8ff':k.color,fg=kind==='ghost'?'#5b4a9a':kind==='ice'?'#3c9ccc':'#ffffff';let r='';
+function kindIcon(kind){const k=KINDS[kind],m=KIND_MARKS[kind],bg=kind==='ghost'?'#ece8ff':k.color,fg=k.mark||'#ffffff';let r='';
  m.forEach((row,y)=>[...row].forEach((v,x)=>{if(v==='1')r+='<rect x="'+(1+x)+'" y="'+(1+y)+'" width=".9" height=".9" fill="'+fg+'"/>'}));
  return '<svg viewBox="0 0 7 7"><rect width="7" height="7" fill="'+bg+'" stroke="#ffffff" stroke-opacity=".6" stroke-width=".3"/>'+r+'</svg>'}
 function openRules(){showPanel(el.rules);blockText($('rulesTitle'),'RULES');const body=$('rulesBody');if(body.dataset.done)return;body.dataset.done=1;
@@ -592,12 +608,14 @@ $('startBtn').addEventListener('click',()=>startGame('endless'));$('againBtn').a
 $('stageBtn').addEventListener('click',openStages);$('stageBack').addEventListener('click',()=>showPanel(el.start));
 $('introStart').addEventListener('click',()=>startGame('stage',stageIdx));$('introBack').addEventListener('click',openStages);
 $('nextBtn').addEventListener('click',()=>{reset(true);openIntro(stageIdx+1)});
-$('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);if(wasStage)openStages()});$('restart').addEventListener('click',()=>{if(state==='ready')return;reset(false)});$('viewBtn').addEventListener('click',viewTower);
+$('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);if(wasStage)openStages()});// レビュー①：メニュー中（ready）は RESTART を無視する
+$('restart').addEventListener('click',()=>{if(state==='ready')return;reset(false)});$('viewBtn').addEventListener('click',viewTower);
 $('badgeBtnStart').addEventListener('click',()=>openBadges(el.start));$('badgeBtnEnd').addEventListener('click',()=>openBadges(el.end));$('badgeBack').addEventListener('click',closeBadges);
 $('rulesBtn').addEventListener('click',openRules);$('rulesBack').addEventListener('click',()=>showPanel(el.start));
 $('rotate').addEventListener('click',()=>{angleChoice=(angleChoice+1)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice])});
 $('sound').addEventListener('click',()=>{soundOn=!soundOn;write('pittariTower3D.sound',soundOn?'on':'off');setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));if(soundOn)beep('land')});
 cv.addEventListener('pointerdown',e=>{e.preventDefault();if(viewing)closeView();else place()},{passive:false});
+// レビュー⑥：キーボード操作（R＝やり直し、C／←→＝視点変更、Space／Enter＝置く・スタート）
 document.addEventListener('keydown',e=>{if(e.code==='KeyR'&&state!=='ready'){reset(false);return}if(e.code==='KeyC'||e.code==='ArrowLeft'||e.code==='ArrowRight'){$('rotate').click();return}if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
 document.addEventListener('visibilitychange',()=>{last=0});setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));reset(true);requestAnimationFrame(tick);
 })();

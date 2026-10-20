@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.3">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.3">
-<link rel="manifest" href="manifest.webmanifest?v=0.20.3">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.4">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.4">
+<link rel="manifest" href="manifest.webmanifest?v=0.20.4">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -35,8 +35,8 @@ canvas{display:block;width:100%;aspect-ratio:360 / 500;position:relative;z-index
 .pill{background:#17264cb5;border:1px solid #c7e7ff72;color:#e8f5ff;padding:6px 10px;border-radius:99px;letter-spacing:.04em;font-weight:900;font-size:10px;box-shadow:0 3px 12px #13214b36}
 .bar{position:absolute;z-index:3;top:0;left:0;right:0;height:4px;background:#fff3}.bar>div{height:100%;background:linear-gradient(90deg,#66e8dc,#d4fdab,#ffcd88);width:100%}
 .bottom-hint{position:absolute;z-index:2;bottom:16px;left:0;right:0;text-align:center;color:#eef9ff;pointer-events:none;text-shadow:0 2px 8px #19254e;font-size:13px;letter-spacing:.15em;font-weight:900}
-.effect{position:absolute;z-index:3;top:14%;left:0;right:0;text-align:center;font-size:28px;line-height:1.2;font-weight:1000;color:#fff0a6;text-shadow:0 3px 0 #9f6c63,0 8px 22px #23274f;letter-spacing:.04em;pointer-events:none;opacity:0;transform:translateY(15px) scale(.9)}
-.effect small{display:block;margin-top:7px;font-size:15px;color:#b7ffe1;text-shadow:0 2px 8px #123453;letter-spacing:.02em}.effect.show{animation:floatUp .86s ease-out both}@keyframes floatUp{0%{opacity:0;transform:translateY(16px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.08)}75%{opacity:1;transform:translateY(-10px) scale(1)}100%{opacity:0;transform:translateY(-14px) scale(1)}}
+.effect{position:absolute;z-index:3;top:17%;left:0;right:0;text-align:center;font-size:28px;line-height:1.2;font-weight:1000;color:#fff0a6;text-shadow:0 3px 0 #9f6c63,0 8px 22px #23274f;letter-spacing:.04em;pointer-events:none;opacity:0;transform:translateY(15px) scale(.9)}
+.effect small{display:block;margin-top:7px;font-size:15px;color:#b7ffe1;text-shadow:0 2px 8px #123453;letter-spacing:.02em}.effect.show{animation:floatUp .86s ease-out both}@keyframes floatUp{0%{opacity:0;transform:translateY(30px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.08)}75%{opacity:1;transform:translateY(-10px) scale(1)}100%{opacity:0;transform:translateY(-26px) scale(1)}}
 .overlay{position:absolute;z-index:5;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;background:linear-gradient(180deg,#18234283,#171b42af)}.overlay[hidden]{display:none}
 .panel{text-align:center;width:100%;max-width:330px;border-radius:24px;border:1px solid #ceeaff77;background:linear-gradient(160deg,#24345cec,#1c2747ee);padding:24px 19px;box-shadow:0 22px 45px #0a1238a0}
 .badge{display:inline-block;background:#fff0aa;color:#685126;padding:5px 12px;border-radius:99px;font-size:11px;letter-spacing:.1em;font-weight:1000;margin-bottom:10px}
@@ -72,7 +72,7 @@ button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .result>div{border-radius:0;border:1.5px solid #ffffff40;background:#101b38;box-shadow:1px -1px 0 #2a3a66,2px -2px 0 #2a3a66,3px -3px 0 #22305a}
 .bitem{border-radius:0!important}
 .stars-big{font-size:28px;line-height:1.1;color:#ffd34d;text-shadow:2px -2px 0 #b8892a;letter-spacing:6px;margin:0 0 4px}
-#endPanel h2{font-size:20px;margin:2px 0 6px}#endPanel .result{margin:8px 0 6px}#endText{font-size:12.5px;margin-bottom:4px}
+#endPanel h2{font-size:20px;margin:2px 0 6px}#endTitle.quote{font-size:17px;line-height:1.45;font-weight:900;margin:4px 0 8px}#endPanel .result{margin:8px 0 6px}#endText{font-size:12.5px;margin-bottom:4px}
 /* ブロック文字のラベル */
 .bt{display:block;height:15px;width:auto;max-width:100%;margin:0 auto;overflow:visible;pointer-events:none}
 .primary .bt{height:21px}.sub .bt{height:14px}.controls .bt{height:11px}.bt.flat{height:8px}
@@ -149,7 +149,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.20.3';
+const VERSION='v0.20.4';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -472,6 +472,15 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
 function dropMoving(msg){missCount++;/* R02 */const m=moving;addFalling(m.x,m.z,m.w,m.d,m.y,m.color,m.dir,m.axis);moving=null;combo=0;
  if(charms>0){charms--;award('charm');fx('セーフ！','#b7ffe1','お守りを1つ使ったよ（のこり'+charms+'）');beep('land');newMoving();updateHud();return}
  state='ending';endsIn=.72;endReason=msg==='MISS!'?'miss':'trip';fx(msg,'#ffabb4');beep('miss');updateHud()}
+// ===== ゲームオーバーの励まし・格言（オリジナル＋ことわざ、全129個） =====
+// 場面に合う言葉（すぐ落ちた・高く積んだ・ゴール目前など）を半分くらいの確率で、残りはどの場面でも出る言葉から。
+// 選び方はランダム。ただし同じ言葉が続かないよう、その組の言葉を全部出し切るまでは同じものを出さない（シャッフルした山から引く）
+const QUOTES={"any":["七転び八起き。まだ一回目の「転び」だよ","失敗は成功のもと。いい「もと」が手に入った","千里の道も一歩から。タワーも一段から","石の上にも三年。タワーの上にも、あと三回","急がば回れ。でもブロックは回ってくれない","雨降って地固まる。タワーは落ちて上手くなる","継続は力なり。つまり、もう一回","塵も積もれば山となる。ブロックも積もればタワーとなる","ローマは一日にして成らず","猿も木から落ちる。ブロックも塔から落ちる","上手の手から水が漏れる","好きこそ物の上手なれ","習うより慣れろ","笑う門には福来る。落ちる塔には次がある","良薬は口に苦し。悔しさは上達に効く","転ばぬ先の杖。お守り、ためておこう","早起きは三文の徳。もう一回は百段の徳","失敗した数だけ、ぴったりが近づいている","今のは練習。そう、練習ということにしよう","ブロックにも気分というものがある","タワーは逃げない。何度でもどうぞ","次のPERFECTは、もう始まっている","画面の向こうで、ブロックも反省しています","世界一高いビルも、最初は1段目だった","大丈夫、ブロックは痛がっていない","惜しい！…と言っておこう","指はうそをつかない。たまにずれるだけ","悔しい？ それは上手くなる合図","深呼吸してから、もう一回","ぴったりの神様は、あきらめない人が好き","今日の失敗は、明日の自慢話","落ちたブロックの分だけ、目が肥えた","「次こそ本気」と、だれもが言う","早すぎてもダメ、遅すぎてもダメ。人生と同じ","ブロックは悪くない。たぶん","集中力、ちょっと休憩中だったかな","建築家だって、最初は失敗から","いまの一段で、手が覚えた","挑戦した人だけが、落ちることができる","「もう一回」は無料です","笑ったもの勝ち。さあ、もう一回","目は正しかった。指が少し急いだだけ","ゆっくりでいい。止まらなければ","クレーンの運転手さんも、きっと最初はこう","地面が恋しくなったんだね、ブロック","重力には勝てない。今日のところは","勝負は次の一段から","いいリズムだった。最後の一拍以外は","ここでやめたら、ブロックが寂しがる","失敗のコレクション、順調に増えています","ずれたのは0.1秒。その差を埋めにいこう","ブロックは何度でも来てくれる。見習いたい","「ぴったり」は、あせっているときに逃げていく","悔しさは最高の燃料","完ぺきな人は、そもそもこのゲームをしない","練習は裏切らない。たまに遅れて効くだけ","転んだら、ついでに何か拾って起きよう","まっすぐ積むのは、案外むずかしい","正解は真ん中。わかってはいるんだけど","人生にリセットボタンはない。ゲームにはある","あきらめの悪い人ほど、高く積む","同じ失敗を二度しなければ、上出来","なんでもない一段が、いちばん大事","タワーは崩れても、思い出は残る","本当の勝負は、何回目で笑えるか","ブロックの気持ちになって考えてみよう","失敗は、どこがダメかを教えてくれる先生","もう一回やりたくなったら、もう上達の途中","さっきの自分より、ほんの少しだけ上手い","落ちる音も、だんだん好きになってきた？","大事なのは、落ちたあとの1タップ","今のはブロックのせい、ということにしておこう","世界はまだ、きみのタワーを待っている","指先の0.1秒に、全部がつまっている"],"early":["ウォーミングアップ、完了！","まだ準備運動の途中だったよね","今のは、なかったことにしよう","エンジンがかかるのはこれから","最初の一段が、いちばん難しい","始まる前に終わった…いや、ここから始まる","タワーというより、台だったね","奈良の大仏さまも、苦笑い","まずは10段。それだけでいい","スタートダッシュ、ちょっと速すぎた","はやい！ 落ちるのが","準備運動が長い人ほど、あとで伸びる","ここで終わる人は、まだ本気を出していないだけ"],"mid":["いい感じに育ってきてたのに","このタワーの住人たち、ちょっとびっくりしてる","ここまで来れたなら、次はもっと行ける","中盤の油断が、いちばんこわい","さっきより、確実に高くなってる","住人のみなさん、ご避難ください","もう少しで雲に届いたのに","積み上げた分は、ちゃんときみの力","半分来たら、残りも半分","ちょうど慣れてきたころが、いちばん危ない"],"high":["ここまで積めたのは本物","高いところほど、風も強い","この高さから落ちるのは、むしろ勲章","雲の上からの景色、どうだった？","これだけ積めたら、もう建築家","高いタワーほど、落ちたときの音も大きい","てっぺんの空気は薄かったかな","住人のみなさん、高さに慣れてきたところだったのに","もうだれにも「低い」とは言わせない","ここまで来たら、あとは記録を狙うだけ","下を見たら負け。上だけ見よう"],"near":["ゴールが見えていた。それがいちばん悔しい","あと少し…この「少し」が遠いんだ","ゴールの枠、手を伸ばせば届いたのに","建物のみなさんも、あと少しと応援してた","次は確実に届く距離","ゴール前は、だれでも力が入る","惜しすぎて、言葉が見つからない","ここまで来たのは偶然じゃない"],"best":["自己ベストまで、あと少しだった","記録の背中が見えていた","さっきの自分に、もう少しで勝てた","ベストを超えるのは、次のプレイ","記録はすぐそこで待っている"],"trip":["考えすぎると、ブロックは帰ってしまう","迷ったら、とりあえずタップ","慎重すぎるのも、考えものだね","待ちすぎて、ブロックが帰宅しました","ブロックは待ってくれない。時間も","ちょうどいい瞬間は、一瞬だけ","見とれていたのかな、ブロックに","石橋をたたきすぎて、渡りそびれた"]};
+const quoteBags={};
+function drawQuote(key){let bag=quoteBags[key];if(!bag||!bag.length){bag=quoteBags[key]=QUOTES[key].slice();for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]]}}return bag.pop()}
+function pickQuote(reason,h){const left=isStage()?goalFloors(stageIdx)-h:99;
+ const key=reason==='trip'&&Math.random()<.6?'trip':left<=5?'near':!isStage()&&bestHeight>0&&h>=bestHeight-3?'best':h<=5?'early':h>=30?'high':'mid';
+ return drawQuote(Math.random()<.5?key:'any')}
 function finish(reason){if(state==='over')return;
  const h=stack.length-1,st=STAGES[stageIdx],clear=reason==='clear';if(!isStage()&&totalPlayed>=RUN_CAP&&missCount===0)award('full');// R02：お守りで助かったミスもミスとして数える
  state='over';moving=null;
@@ -482,11 +491,11 @@ function finish(reason){if(state==='over')return;
  const passed=LANDMARKS.filter(([m])=>m<=h*FLOOR_M).pop(),landmarkText=passed?passed[1]+'（'+passed[0]+'m）より高い！':'まずは'+LANDMARKS[0][1]+'（'+LANDMARKS[0][0]+'m）をめざそう';
  const got=newBadges.map(id=>BADGES.find(b=>b[0]===id)),badgeText=got.length?'\n🏅 バッジ +'+got.length+'（'+got.map(b=>b[1]).join('')+'）':'';
  if(isStage()){
-  blockText($('endBadge'),clear?'CLEAR!':reason==='trip'?'TIME UP':'GAME OVER');$('endTitle').textContent=clear?st.name+'に到達！':reason==='trip'?'時間切れ…':'落ちちゃった！';
+  blockText($('endBadge'),clear?'CLEAR!':reason==='trip'?'TIME UP':'GAME OVER');const quote=!clear;$('endTitle').textContent=clear?st.name+'に到達！':pickQuote(reason,h);$('endTitle').classList.toggle('quote',quote);
   $('endStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
   $('endText').textContent=(clear?'PERFECT率 '+Math.round(rate*100)+'% ／ 最大'+maxCombo+'連続':'ゴールまで あと'+(goalFloors(stageIdx)-h)+'段（'+st.name+' '+st.m+'m）')+badgeText;
  }else{
-  blockText($('endBadge'),record?'NEW RECORD!':reason==='time'?'TIME UP':'GAME OVER');$('endTitle').textContent=record?'新記録達成！':reason==='time'?'チャレンジ終了！':'落ちちゃった！';
+  blockText($('endBadge'),record?'NEW RECORD!':reason==='time'?'TIME UP':'GAME OVER');const quote=!record&&reason!=='time';$('endTitle').textContent=record?'新記録達成！':reason==='time'?'チャレンジ終了！':pickQuote(reason,h);$('endTitle').classList.toggle('quote',quote);
   $('endText').textContent=landmarkText+'\nPERFECT '+perfects+'回 ／ 最大'+maxCombo+'連続'+badgeText}
  $('endStars').hidden=!(isStage()&&clear);
  // クリアして次があれば「次のステージ」を一番目立たせ、「もう一度」は控えめに

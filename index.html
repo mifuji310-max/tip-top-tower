@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.15.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.15.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.15.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.16.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.16.0">
+<link rel="manifest" href="manifest.webmanifest?v=0.16.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -140,7 +140,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.15.0';
+const VERSION='v0.16.0';
 const $=id=>document.getElementById(id);const cv=$('game');$('ver').textContent=VERSION;
 const gl=cv.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:false})||cv.getContext('experimental-webgl',{antialias:true,alpha:true});
 const fallbackCtx=gl?null:cv.getContext('2d');
@@ -163,11 +163,23 @@ const LANDMARKS=[[15,'奈良の大仏'],[93,'自由の女神'],[120,'牛久大�
 const SCALE=[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5];
 // 特殊ブロック：色（alt と交互に光る）・まわりに出る粒の色
 const KINDS={
- gold:{color:'#ffcc33',alt:'#fff6c2',spark:'#fff3a0'},
- ice:{color:'#e6f9ff',alt:'#7fd4ff',spark:'#ffffff'},
- grow:{color:'#6dff8e',alt:'#d2ffdc',spark:'#b9ffc9'}};
+ gold:{color:'#ffcc33',alt:'#fff6c2',spark:'#fff3a0'},   // ロケット：PERFECTで3段いっきに積み上がる
+ ice:{color:'#e6f9ff',alt:'#7fd4ff',spark:'#ffffff'},    // 氷：速く動く
+ grow:{color:'#6dff8e',alt:'#d2ffdc',spark:'#b9ffc9'},   // ふくらむ：PERFECTで太くなる
+ magnet:{color:'#ff4d5e',alt:'#ffd0d6',spark:'#ffb3bc'}, // 磁石：近くで止めると吸い付いてPERFECT
+ warp:{color:'#e05bff',alt:'#f7d6ff',spark:'#f0b3ff'},   // ワープ：端まで行くと反対の端から出てくる
+ ghost:{color:'#ffffff',alt:'#d9d2ff',spark:''},         // おばけ：ときどきフッと消える
+ thunder:{color:'#3d6bff',alt:'#c9d6ff',spark:'#e8f0ff'},// 雷：外すと、ずれの2倍削れる
+ mini:{color:'#ff9a3c',alt:'#ffe0bf',spark:'#ffd2a3'}};  // ミニ：幅が半分ぐらいで来る
 const CHARM_EVERY=4,WIND_EVERY=10;
-const KIND_MARKS={gold:['00100','01110','11111','01110','01010'],ice:['10101','01110','11011','01110','10101'],grow:['00100','00100','11111','00100','00100']};
+const KIND_MARKS={gold:['00100','01110','11111','00100','00100'],ice:['10101','01110','11011','01110','10101'],grow:['00100','00100','11111','00100','00100'],
+ magnet:['10001','10001','10001','10001','01110'],warp:['01000','11111','00000','11111','00010'],ghost:['00000','01010','01010','00000','01110'],
+ thunder:['00110','01100','11111','00110','01100'],mini:['00000','01110','01010','01110','00000']};
+// エンドレスでの出やすさ（3段目から）。ミニは15段目から・下が太いときだけ、ふくらむは細いときだけ
+function pickKind(r,thin,level){const t=[['gold',.06],['ice',.05],['magnet',.06],['warp',.05],['ghost',.04],['thunder',.04]];if(level>=15&&!thin)t.push(['mini',.04]);if(thin)t.push(['grow',.10]);
+ let a=0;for(const [k,q] of t){a+=q;if(r<a)return k}return ''}
+// おばけの見え方：見える→フッと消える→また現れる をくり返す（1周約1.3秒）
+function ghostAlpha(){const ph=(clock*.75)%1;return ph<.55?1:ph<.65?1-(ph-.55)/.1:ph<.9?0:(ph-.9)/.1}
 // 高さで変わる空（m, 上→下の4色, 星の濃さ）：夕方→雲の上の青空→夕暮れ→夜→宇宙
 const SKY=[[0,['#334985','#3e448a','#7775ad','#b7aac5'],.42],[150,['#2f6fc4','#4f95dc','#8fc6ef','#dff1ff'],0],[330,['#2a3778','#4b4d98','#9a74a8','#f0a98a'],.15],[600,['#0d1438','#17204f','#26306a','#3d3f78'],.7],[850,['#020309','#060820','#0c1030','#171a45'],1]];
 // 100〜300m付近に浮かぶ雲（位置は毎回同じ）
@@ -175,14 +187,14 @@ const CLOUDS=Array.from({length:16},(_,i)=>({y:(9+i*1.4)*H,a:i*2.39,r:7+(i*37%5)
 // バッジ（id, アイコン, 名前, 取り方）
 const BADGES=[['h10','🏠','はじめの一歩','100mまで積む'],['tokyo','🗼','東京タワー超え','333mを超える'],['sky','🌆','スカイツリー超え','634mを超える'],['burj','🏙','世界一のビル超え','828mを超える'],
  ['c5','✨','5連続PERFECT','PERFECTを5回続ける'],['c10','🌟','10連続PERFECT','PERFECTを10回続ける'],['c20','👑','20連続PERFECT','PERFECTを20回続ける'],
- ['gold','🥇','金ピカ','金ブロックをPERFECT'],['ice','🧊','氷の達人','氷ブロックをPERFECT'],['grow','🌱','ふくらまし名人','緑ブロックをPERFECT'],['wind','🌬','風に負けない','風の段をPERFECT'],
+ ['gold','🚀','ロケット発射','ロケットブロックをPERFECT'],['ice','🧊','氷の達人','氷ブロックをPERFECT'],['grow','🌱','ふくらまし名人','緑ブロックをPERFECT'],['wind','🌬','風に負けない','風の段をPERFECT'],
  ['charm','🧿','お守りに感謝','お守りでセーフ'],['hurry','⏰','ギリギリ名人','残り10秒未満でPERFECT'],['r300','🏘','にぎやかタワー','住人300人'],['full','🏁','あそびきり','3分間ミスせず遊ぶ'],
  ['star3','⭐','パーフェクトクリア','ステージを★3でクリア'],['allclear','🎖','ステージ制覇','全ステージをクリア']];
 // ステージモード：ゴールは実在の建物。1ステージに1つずつ新しい仕掛けが登場する
 const STAGES=[
  {name:'自由の女神',m:93,kinds:[],wind:false,intro:'まずは練習！\nブロックは1往復するまでに置こう。\n赤く光ったら急いで！'},
- {name:'牛久大仏',m:120,kinds:['gold'],wind:false,first:'gold',intro:'新登場：金ブロック\n金色に光るブロックをPERFECTで置くと得点3倍！'},
- {name:'東京都庁',m:243,kinds:['gold','ice'],wind:false,first:'ice',intro:'新登場：氷ブロック\n水色の氷ブロックは速いけど得点2倍'},
+ {name:'牛久大仏',m:120,kinds:['gold'],wind:false,first:'gold',intro:'新登場：ロケットブロック\n金色のブロックをPERFECTで置くと、3段いっきに積み上がる！'},
+ {name:'東京都庁',m:243,kinds:['gold','ice'],wind:false,first:'ice',intro:'新登場：氷ブロック\n水色の氷ブロックは、いつもより速く動く'},
  {name:'あべのハルカス',m:300,kinds:['gold','ice','grow'],wind:false,first:'grow',intro:'新登場：ふくらむブロック\n緑のブロックをPERFECTで置くと太くなる'},
  {name:'東京タワー',m:333,kinds:['gold','ice','grow'],wind:true,intro:'新登場：風\n10段ごとに風がふく。\n白い線と同じ向きに動くと速く、逆だと遅い'}];
 const goalFloors=i=>Math.ceil(STAGES[i].m/FLOOR_M);
@@ -234,7 +246,7 @@ let best=Math.max(0,Number(read('pittariTower3D.best',read('pittariTower3D.v03.b
 let soundOn=read('pittariTower3D.sound','on')==='on',audio=null;
 let badges=new Set(),newBadges=[];try{badges=new Set(JSON.parse(read('pittariTower3D.badges','[]')))}catch{}
 // バッジはプレイ中は知らせず、結果画面でまとめて見せる（プレイ中は画面を見る余裕がないため）
-function award(id){if(badges.has(id))return;badges.add(id);newBadges.push(id);write('pittariTower3D.badges',JSON.stringify([...badges]))}
+function award(id){if(badges.has(id)||!BADGES.some(b=>b[0]===id))return;badges.add(id);newBadges.push(id);write('pittariTower3D.badges',JSON.stringify([...badges]))}
 // ステージごとの最高★（0＝未クリア）。前のステージを★1以上でクリアすると次が遊べる
 let stageStars=STAGES.map(()=>0);try{const s=JSON.parse(read('pittariTower3D.stageStars','[]'));stageStars=STAGES.map((_,i)=>Number(s[i])||0)}catch{}
 let mode='endless',stageIdx=0,endReason='miss';
@@ -260,20 +272,20 @@ function newMoving(){const prev=stack[stack.length-1],level=stack.length,axis=le
  moving={x:prev.x,z:prev.z,w:prev.w,d:prev.d,y:(level+.5)*H,color:theme.blocks[level%theme.blocks.length],axis,dir:-side,speed:Math.min(4.1+(level-1)*.28,8.7)};moving[axis]=side*(MARGIN+1.0);
  // 特殊ブロック（3段目から）：金＝PERFECTで3倍／氷＝速いけど2倍／緑＝PERFECTでふくらむ（細くなった時だけ）
  const r=Math.random(),thin=prev.w*prev.d<BASE*BASE*.64;
- moving.kind=level<3?'':r<.10?'gold':r<.18?'ice':(thin&&r<.30)?'grow':'';moving.trip=0;
+ moving.kind=level<3?'':pickKind(r,thin,level);moving.trip=0;
  // ステージ：そのステージで出せる仕掛けだけ。新登場の仕掛けは3段目で必ず1回見せる
  const st=STAGES[stageIdx];
  if(isStage()&&state==='playing'){if(!st.kinds.includes(moving.kind))moving.kind='';if(level===3&&st.first)moving.kind=st.first}
  // 風の段（10段ごと）：ブロックが動く線に沿って片方向に吹く。特殊ブロックにはしない
  if(level>=WIND_EVERY&&level%WIND_EVERY===0&&(!isStage()||st.wind)){moving.kind='';moving.wind=Math.random()<.5?1:-1;if(state==='playing')beep('wind')}
  const k=KINDS[moving.kind];
- if(k){moving.color=k.color;if(moving.kind==='ice')moving.speed*=1.35;if(state==='playing')beep('special')}}
+ if(k){moving.color=k.color;if(moving.kind==='ice')moving.speed*=1.35;if(moving.kind==='mini'){moving.w*=.55;moving.d*=.55}if(state==='playing')beep('special')}}
 // 追い風（風と同じ向きに動く）は1.4倍、向かい風は0.6倍
 const windFactor=()=>moving&&moving.wind?(moving.dir===moving.wind?1.4:.6):1;
 function reset(preview=false){state=preview?'ready':'playing';theme=pickTheme(preview);stack=[{x:0,y:H/2,z:0,w:BASE,d:BASE,color:theme.blocks[0]}];moving=null;falling=[];sparks=[];score=0;combo=0;maxCombo=0;perfects=0;bonusSeconds=0;residents=0;elapsed=0;totalPlayed=0;endsIn=0;camY=1.8;camTarget=1.8;charms=0;viewing=false;camDist=camDistT=CAM_DIST;camLift=camLiftT=CAM_LIFT;camAzTarget=nearAngle(ANGLES[angleChoice]);winds=[];skyM=0;applySky(0);newBadges=[];endReason='miss';
  if(preview){mode='endless';for(let n=1;n<=3;n++){const w=BASE-.36*n;stack.push({x:.12*n,y:(n+.5)*H,z:-.1*n,w,d:w,color:theme.blocks[n%theme.blocks.length],born:-9,perfect:n===2})}newMoving();showPanel(el.start);if(logoLetters.length)logoIntro();setText(el.hint,'3D STACKING',['#eef9ff'],{flat:1});el.tip.textContent='PERFECTを続けると音がドレミと上がるよ！'}
  else{newMoving();showPanel(null);setText(el.hint,'TAP TO STACK',['#eef9ff'],{flat:1});
-  el.tip.textContent=isStage()?'ゴール：'+STAGES[stageIdx].name+' '+STAGES[stageIdx].m+'m。ブロックは1往復するまでに置こう':'残り10秒を切ると得点2倍！4連続PERFECTでお守りゲット（最大3分）';beep('start')}
+  el.tip.textContent=isStage()?'ゴール：'+STAGES[stageIdx].name+' '+STAGES[stageIdx].m+'m。ブロックは1往復するまでに置こう':'4連続PERFECTでお守りゲット（最大3分）';beep('start')}
  updateHud()}
 function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
 // ステージ選択：★の数と、まだ遊べないステージは🔒
@@ -307,37 +319,45 @@ function closeBadges(){$('badgePanel').hidden=true;if(badgeFrom)badgeFrom.hidden
 function fx(message,col='#fff0a5',detail=''){ setText($('effect-title'),message.replace('×','X'),[col]); $('effect-detail').textContent=detail;el.effect.style.color=col;el.effect.classList.remove('show');void el.effect.offsetWidth;el.effect.classList.add('show')}
 function flashTime(){const stat=el.time.parentElement;stat.classList.remove('bonus-flash');void stat.offsetWidth;stat.classList.add('bonus-flash')}
 const fmtSec=n=>Math.round(n*10)/10;
+// ワープした瞬間に、出てきた場所で粒をはじけさせる
+function warpBurst(){const m=moving;for(let i=0;i<14;i++){const t=Math.random()*Math.PI*2,v=1.5+Math.random()*2;sparks.push({x:m.x,y:m.y,z:m.z,vx:Math.cos(t)*v,vy:Math.random()*2,vz:Math.sin(t)*v,life:.4+Math.random()*.3,color:'#f0b3ff',size:.16})}}
 function confetti(b){for(let i=0;i<24;i++){const t=Math.random()*Math.PI*2;const speed=1+Math.random()*2.8;sparks.push({x:b.x+(Math.random()-.5)*b.w,y:b.y+H*.38,z:b.z+(Math.random()-.5)*b.d,vx:Math.cos(t)*speed,vy:1.8+Math.random()*3,vz:Math.sin(t)*speed,life:.5+Math.random()*.6,color:i%3===0?'#fff5bd':i%3===1?'#ffffff':'#97fff0'})}}
 function addFalling(x,z,w,d,y,color,dir,axis){if(w<=.003||d<=.003)return;falling.push({x,y,z,w,d,color,vx:axis==='x'?dir*1.9:(Math.random()-.5)*.5,vz:axis==='z'?dir*1.9:(Math.random()-.5)*.5,vy:.1,tilt:0,life:2.2})}
 function place(){if(state!=='playing'||!moving)return;const prev=stack[stack.length-1],axis=moving.axis,p=moving[axis],c=prev[axis],width=axis==='x'?'w':'d';let delta=p-c;const tolerance=.15;
- // 得点倍率：ギリギリ（残り10秒未満）2倍・氷2倍・金PERFECT3倍。かけ算で重なる
- const kind=moving.kind,wasWind=moving.wind,isPerfect=Math.abs(delta)<=tolerance,tags=[isHurry()&&'ギリギリ2倍',kind==='ice'&&'氷2倍',isPerfect&&kind==='gold'&&'金3倍'].filter(Boolean);
- const mult=(isHurry()?2:1)*(kind==='ice'?2:1)*(isPerfect&&kind==='gold'?3:1),tagText=tags.length?'（'+tags.join('・')+'）':'';let block,title,color,detail;
+ // 得点の倍率は、いまは無し（最後に調整する）。磁石は判定が3倍ゆるい＝吸い付く
+ const kind=moving.kind,wasWind=moving.wind,hurryNow=isHurry(),hStart=stack.length-1,isPerfect=Math.abs(delta)<=(kind==='magnet'?tolerance*3:tolerance);let block,title,color,detail,rocket=0;
  if(isPerfect){block={...moving,x:prev.x,z:prev.z,w:prev.w,d:prev.d,perfect:true};combo++;maxCombo=Math.max(maxCombo,combo);perfects++;
- const points=(20+Math.min(4,combo-1)*10)*mult,requestedTime=isStage()?0:1+Math.min(2,combo-1);score+=points;
+ const points=20+Math.min(4,combo-1)*10,requestedTime=isStage()?0:1+Math.min(2,combo-1);score+=points;
  const before=elapsed;elapsed=Math.max(MAX_TIME-TIME_CAP,elapsed-requestedTime);const gained=before-elapsed;bonusSeconds+=gained;
- title=kind==='gold'?'GOLD PERFECT!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='gold'?'#ffd34d':'#fff0a5';detail='+'+points+'点'+tagText+(gained>0?'  ＋'+fmtSec(gained)+'秒':'');
+ title=kind==='magnet'?'MAGNET!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='magnet'?'#ff8a96':'#fff0a5';detail='+'+points+'点'+(gained>0?'  ＋'+fmtSec(gained)+'秒':'');
+ // ロケット：PERFECTで置くと、同じ形のブロックが3段いっきに積み上がる
+ if(kind==='gold')rocket=3;
  // ふくらむブロック：幅・奥行きを少し取り戻す
  if(kind==='grow'){block.w=Math.min(BASE,prev.w+.5);block.d=Math.min(BASE,prev.d+.5);title='ふくらんだ！';color='#6dff8e'}
  // お守り：4連続PERFECTごとに1つ（最大3つ）。気づきやすいよう見出しで知らせる
  if(combo%CHARM_EVERY===0&&charms<MAX_CHARMS){charms++;detail=title+'  '+detail;title='お守りゲット！';color='#ff9ad5';beep('charm')}
- if(combo>=5)award('c5');if(combo>=10)award('c10');if(combo>=20)award('c20');if(KINDS[kind])award(kind);if(wasWind)award('wind');if(tags.includes('ギリギリ2倍'))award('hurry');
+ if(combo>=5)award('c5');if(combo>=10)award('c10');if(combo>=20)award('c20');if(KINDS[kind])award(kind);if(wasWind)award('wind');if(hurryNow)award('hurry');
  if(gained>0)flashTime();confetti(block);beep('perfect',combo)}
- else{const half=moving[width]/2,ph=prev[width]/2,left=Math.max(p-half,c-ph),right=Math.min(p+half,c+ph),overlap=right-left;
+ else{const half=moving[width]/2,ph=prev[width]/2;let left=Math.max(p-half,c-ph),right=Math.min(p+half,c+ph);
+ // 雷：外すと、はみ出した側をさらに同じだけ削る＝ずれの2倍削れる
+ if(kind==='thunder'){const extra=moving[width]-(right-left);if(delta>0)right-=extra;else left+=extra}
+ const overlap=right-left;
  if(overlap<=.001){dropMoving('MISS!');return}
  block={...moving,[axis]:(left+right)/2,[width]:overlap};
  const cut=moving[width]-overlap;
  if(cut>.002){const cutCenter=delta>0?right+cut/2:left-cut/2;let cx=moving.x,cz=moving.z;if(axis==='x')cx=cutCenter;else cz=cutCenter;
  addFalling(cx,cz,axis==='x'?cut:moving.w,axis==='z'?cut:moving.d,moving.y,moving.color,delta>0?1:-1,axis)}
- combo=0;const points=10*mult;score+=points;title='+'+points;color='#cff4ff';detail=tagText;beep('land')}
+ combo=0;const points=10;score+=points;const zap=kind==='thunder';title=zap?'ZAP!':'+'+points;color=zap?'#9fb4ff':'#cff4ff';detail=zap?'+'+points:'';beep(zap?'zap':'land')}
  delete block.axis;delete block.dir;delete block.speed;delete block.kind;delete block.wind;block.born=clock;stack.push(block);residents+=residentsOf(block);moving=null;
+ if(rocket){for(let i=1;i<=rocket;i++){const nb={...block,y:block.y+i*H,born:clock+i*.13,appear:clock+i*.13,perfect:true};stack.push(nb);residents+=residentsOf(nb);confetti(nb)}
+  title='ROCKET!';color='#ffd34d';detail='+'+rocket+'段  '+detail;beep('rocket')}
  // 実在の建物の高さを超えたら、その名前を大きく表示
  const h=stack.length-1;
  for(const [id,m] of [['h10',100],['tokyo',333],['sky',634],['burj',828]])if(h*FLOOR_M>=m)award(id);
  if(residents>=300)award('r300');
- const lm=LANDMARKS.filter(([m])=>m>(h-1)*FLOOR_M&&m<=h*FLOOR_M).pop();
+ const lm=LANDMARKS.filter(([m])=>m>hStart*FLOOR_M&&m<=h*FLOOR_M).pop();
  if(lm){detail=h*FLOOR_M+'m到達！  '+title+(detail?' '+detail:'');title=lm[1]+' 超え！';color='#a8f0ff';beep('landmark')}
- else if(!isStage()&&bestHeight>0&&h===bestHeight+1){detail=title+(detail?' '+detail:'');title='自己ベスト超え！';color='#ffe08a';beep('landmark')}
+ else if(!isStage()&&bestHeight>0&&hStart<=bestHeight&&h>bestHeight){detail=title+(detail?' '+detail:'');title='自己ベスト超え！';color='#ffe08a';beep('landmark')}
  camTarget=Math.max(1.8,(stack.length-5.5)*H+1.8);
  // ステージ：ゴールの高さに着いたらクリア（少し間をおいて結果へ）
  if(isStage()&&h>=goalFloors(stageIdx)){fx('STAGE CLEAR!','#7dffb0',STAGES[stageIdx].name+'に到達！');beep('landmark');state='ending';endsIn=1.1;endReason='clear';updateHud();return}
@@ -375,12 +395,13 @@ function beep(kind,n=1){if(!soundOn)return;try{const AC=window.AudioContext||win
  // 音がまだ許可されていなければ、許可（指を離した瞬間）を待って鳴らす。0.9秒以上前の音は捨てる
  if(audio.state!=='running'){const at=performance.now();audio.resume().then(()=>{if(performance.now()-at<900)playSound(kind,n)}).catch(()=>{});return}
  playSound(kind,n)}catch{}}
-function playSound(kind,n){try{let t=audio.currentTime,notes=kind==='perfect'?scaleNotes(n):kind==='landmark'?[[784,.18,.1],[988,.28,.1],[1175,.38,.26]]:kind==='special'?[[1319,.22,.08],[1760,.3,.08],[2093,.38,.14]]:kind==='charm'?[[880,.12,.1],[1109,.2,.1],[1319,.28,.1],[1760,.36,.2]]:kind==='wind'?[[260,.2,.6]]:kind==='miss'?[[245,0,.27]]:kind==='start'?[[1400,0,.07],[2000,.07,.09]]:[[420,0,.09]];
- for(const [f,delay,len]of notes){const o=audio.createOscillator(),g=audio.createGain();o.type=kind==='wind'?'triangle':'sine';o.frequency.setValueAtTime(f,t+delay);if(kind==='miss')o.frequency.exponentialRampToValueAtTime(110,t+delay+len);if(kind==='wind')o.frequency.exponentialRampToValueAtTime(820,t+delay+len*.6);if(kind==='start')o.frequency.exponentialRampToValueAtTime(f*.45,t+delay+len);g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(.08,t+delay+.012);g.gain.exponentialRampToValueAtTime(.0001,t+delay+len);o.connect(g);g.connect(audio.destination);o.start(t+delay);o.stop(t+delay+len+.025)}}catch{}}
+function playSound(kind,n){try{let t=audio.currentTime,notes=kind==='perfect'?scaleNotes(n):kind==='landmark'?[[784,.18,.1],[988,.28,.1],[1175,.38,.26]]:kind==='special'?[[1319,.22,.08],[1760,.3,.08],[2093,.38,.14]]:kind==='charm'?[[880,.12,.1],[1109,.2,.1],[1319,.28,.1],[1760,.36,.2]]:kind==='wind'?[[260,.2,.6]]:kind==='rocket'?[[330,.05,.45]]:kind==='zap'?[[1400,0,.2]]:kind==='miss'?[[245,0,.27]]:kind==='start'?[[1400,0,.07],[2000,.07,.09]]:[[420,0,.09]];
+ for(const [f,delay,len]of notes){const o=audio.createOscillator(),g=audio.createGain();o.type=kind==='wind'||kind==='rocket'?'triangle':kind==='zap'?'square':'sine';o.frequency.setValueAtTime(f,t+delay);if(kind==='miss')o.frequency.exponentialRampToValueAtTime(110,t+delay+len);if(kind==='wind')o.frequency.exponentialRampToValueAtTime(820,t+delay+len*.6);if(kind==='start')o.frequency.exponentialRampToValueAtTime(f*.45,t+delay+len);if(kind==='rocket')o.frequency.exponentialRampToValueAtTime(1600,t+delay+len);if(kind==='zap')o.frequency.exponentialRampToValueAtTime(90,t+delay+len);g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(.08,t+delay+.012);g.gain.exponentialRampToValueAtTime(.0001,t+delay+len);o.connect(g);g.connect(audio.destination);o.start(t+delay);o.stop(t+delay+len+.025)}}catch{}}
 function update(dt){clock+=dt;
  if(state==='playing'){if(!isStage()){elapsed=Math.min(MAX_TIME,elapsed+dt);totalPlayed+=dt}
   if(!isStage()&&(elapsed>=MAX_TIME||totalPlayed>=RUN_CAP)){finish('time')}
-  else if(moving){const step=moving.speed*windFactor()*dt;moving[moving.axis]+=moving.dir*step;moving.trip+=step;if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=MARGIN+1;moving.dir=-1}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=-MARGIN-1;moving.dir=1}
+  else if(moving){const step=moving.speed*windFactor()*dt;moving[moving.axis]+=moving.dir*step;moving.trip+=step;if(moving.kind==='warp'){if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=-MARGIN-1;warpBurst()}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=MARGIN+1;warpBurst()}}
+   else if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=MARGIN+1;moving.dir=-1}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=-MARGIN-1;moving.dir=1}
    // ステージ：1往復して元の端に戻ったら時間切れで落ちる
    if(isStage()&&moving.trip>=TRIP)dropMoving('時間切れ！')}
   updateHud()}
@@ -391,7 +412,7 @@ function update(dt){clock+=dt;
  const camK=Math.min(1,dt*(viewing?1.6:4));camY+=(camTarget-camY)*camK;camDist+=(camDistT-camDist)*camK;camLift+=(camLiftT-camLift)*camK;camAz+=(camAzTarget-camAz)*Math.min(1,dt*3);
  for(const b of falling){b.x+=b.vx*dt;b.z+=b.vz*dt;b.vy-=13*dt;b.y+=b.vy*dt;b.life-=dt}falling=falling.filter(b=>b.life>0&&b.y>camY-17);
  // 特殊ブロックのまわりに粒を出し続ける（金＝舞い上がる／氷＝こぼれ落ちる／緑＝ふわっと）
- if(moving&&KINDS[moving.kind]&&!viewing){sparkTimer-=dt;while(sparkTimer<0){sparkTimer+=.03;const m=moving,up=m.kind==='ice'?-.6:1.4+Math.random()*1.4;
+ if(moving&&KINDS[moving.kind]&&KINDS[moving.kind].spark&&!viewing){sparkTimer-=dt;while(sparkTimer<0){sparkTimer+=.03;const m=moving,up=m.kind==='ice'?-.6:1.4+Math.random()*1.4;
   sparks.push({x:m.x+(Math.random()-.5)*m.w*1.1,y:m.y+(Math.random()-.5)*H,z:m.z+(Math.random()-.5)*m.d*1.1,vx:(Math.random()-.5)*.8,vy:up,vz:(Math.random()-.5)*.8,life:.45+Math.random()*.4,color:KINDS[m.kind].spark,size:.15})}}
  for(const s of sparks){s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;s.vy-=6*dt;s.life-=dt}sparks=sparks.filter(s=>s.life>0);
  // 風の筋：ブロックが動く線に沿って、風の向きに流れる（筋と同じ向きに動く時が速い）
@@ -433,7 +454,7 @@ function render(){faces=[];edges=[];boxRecords=[];
  const eye=[Math.sin(camAz)*camDist,camY+camLift,Math.cos(camAz)*camDist];
  // Floating island & base pedestal, both genuine 3D cuboids.
  if(camY<8||viewing){box(0,-.55,0,8.6,.60,8.6,'#3c416e',1);box(0,-.20,0,8.15,.14,8.15,'#747fb5',1);box(0,-.11,0,5.75,.16,5.75,'#a5bce4',1)}
- for(const b of stack){box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
+ for(const b of stack){if(b.appear&&clock<b.appear)continue;box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
  // 雲：てっぺんより下にだけ出す（動くブロックを隠さないように）。積むほど雲を突き抜けていく
  const topY=stack[stack.length-1].y;
  for(const c of CLOUDS){if(c.y>topY-.5||(!viewing&&Math.abs(c.y-camY)>14))continue;const a=c.a+clock*.04,x=Math.cos(a)*c.r,z=Math.sin(a)*c.r,s=c.s;
@@ -445,10 +466,10 @@ function render(){faces=[];edges=[];boxRecords=[];
  // 動くブロック：特殊ブロックは光る。ステージで1往復の残りが少ないと赤く点滅
  if(moving){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*10)+1)/2):moving.color;
   const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/TRIP-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
-  box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col);
+  const ga=moving.kind==='ghost'?ghostAlpha():1;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:1);
   // 特殊ブロックの上面に、白いドット絵のマーク
-  const mk=KIND_MARKS[moving.kind];if(mk){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.035;
-   mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,'#ffffff',1,false)}))}}
+  const mk=KIND_MARKS[moving.kind];if(mk&&ga>.02){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.035;
+   mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,moving.kind==='ghost'?'#5b4a9a':'#ffffff',ga,false)}))}}
  // お守り：持っている数だけ、動くブロックより上でピンクのキューブが小さく回る
  if(charms>0&&!viewing){const top=stack[stack.length-1];for(let i=0;i<charms;i++){const a=clock*1.8+i*Math.PI*2/charms;box(Math.cos(a)*1.6,top.y+H*4.2+Math.sin(clock*3+i)*.12,Math.sin(a)*1.6,.34,.34,.34,'#ff8fd0',1)}}
  for(const b of falling){box(b.x,b.y,b.z,b.w,H,b.d,b.color,Math.min(1,b.life/.5))}

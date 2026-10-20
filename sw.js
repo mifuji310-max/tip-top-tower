@@ -2,7 +2,7 @@
 // 方針：ネット優先。つながるときは毎回最新のファイルを取りに行き（更新がすぐ反映される）、
 //       取れたファイルを保存しておく。つながらないときだけ、保存しておいたファイルを使う。
 // バージョンを上げたら CACHE の名前もそろえて変える（古い保存データを消すため）。
-const CACHE = 'tip-top-tower-v0.20.2';
+const CACHE = 'tip-top-tower-v0.20.3';
 const ASSETS = [
   './',
   './index.html',
@@ -36,7 +36,7 @@ self.addEventListener('fetch', e => {
         if (res.ok) { const copy = res.clone(); e.waitUntil(caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {})); }
         return res;
       })
-      // ?v=0.20.2 のような付け足しは無視して、保存しておいたファイルを探す。
+      // ?v=0.20.3 のような付け足しは無視して、保存しておいたファイルを探す。
       // 見つからないとき、ページを開くときだけゲーム本体を返す。それ以外は「オフライン」と答える
       .catch(() => caches.match(req, { ignoreSearch: true })
         .then(r => r || (req.mode === 'navigate' ? caches.match('./index.html') : undefined))

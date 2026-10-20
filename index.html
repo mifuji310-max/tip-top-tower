@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.2">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.2">
-<link rel="manifest" href="manifest.webmanifest?v=0.20.2">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.3">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.3">
+<link rel="manifest" href="manifest.webmanifest?v=0.20.3">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -24,9 +24,8 @@ h1 em{font-style:normal;color:#ffe9aa}.chip3d{display:inline-block;vertical-alig
 .best small{display:block;font-size:10px;letter-spacing:.12em;color:#acc0e1;font-weight:800}
 .best strong{font-size:22px;font-weight:1000;font-variant-numeric:tabular-nums}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:11px}
-.stat{position:relative;background:#2833529e;border:1px solid #536181;border-radius:13px;text-align:center;padding:8px 4px 7px}
+.stat{background:#2833529e;border:1px solid #536181;border-radius:13px;text-align:center;padding:8px 4px 7px}
 .stat small{display:block;color:#becae2;font-size:10px;font-weight:800;margin-bottom:1px}
-.plus{position:absolute;left:0;right:0;top:calc(100% - 4px);z-index:5;font-size:13px;font-weight:1000;color:#fff0a6;text-shadow:0 2px 6px #10183a;opacity:0;pointer-events:none}.plus.show{animation:plusUp .75s ease-out both}@keyframes plusUp{0%{opacity:0;transform:translateY(6px)}20%{opacity:1;transform:translateY(0)}70%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
 .stat strong{display:block;font-size:23px;line-height:1.12;font-variant-numeric:tabular-nums;font-weight:1000}
 .stat:nth-child(3) strong{color:#ffe49e}.stat:nth-child(4) strong{color:#9fe9e7}.stat.bonus-flash{animation:timeFlash .65s ease-out}@keyframes timeFlash{30%{background:#2c816b;border-color:#b0ffca;box-shadow:0 0 22px #69ffae66}100%{background:#2833529e}}
 .stage{position:relative;overflow:hidden;border-radius:22px;isolation:isolate;border:2px solid #8897ce;box-shadow:0 18px 45px #04081d82,inset 0 0 28px #9ec6ff2a;touch-action:manipulation;user-select:none;-webkit-user-select:none;background:radial-gradient(ellipse 65% 30% at 52% 30%,#7086cd56,transparent 75%),linear-gradient(165deg,#334985 0%,#3e448a 43%,#7775ad 78%,#b7aac5 100%)}
@@ -36,8 +35,8 @@ canvas{display:block;width:100%;aspect-ratio:360 / 500;position:relative;z-index
 .pill{background:#17264cb5;border:1px solid #c7e7ff72;color:#e8f5ff;padding:6px 10px;border-radius:99px;letter-spacing:.04em;font-weight:900;font-size:10px;box-shadow:0 3px 12px #13214b36}
 .bar{position:absolute;z-index:3;top:0;left:0;right:0;height:4px;background:#fff3}.bar>div{height:100%;background:linear-gradient(90deg,#66e8dc,#d4fdab,#ffcd88);width:100%}
 .bottom-hint{position:absolute;z-index:2;bottom:16px;left:0;right:0;text-align:center;color:#eef9ff;pointer-events:none;text-shadow:0 2px 8px #19254e;font-size:13px;letter-spacing:.15em;font-weight:900}
-.effect{position:absolute;z-index:3;top:31%;left:0;right:0;text-align:center;font-size:28px;line-height:1.2;font-weight:1000;color:#fff0a6;text-shadow:0 3px 0 #9f6c63,0 8px 22px #23274f;letter-spacing:.04em;pointer-events:none;opacity:0;transform:translateY(15px) scale(.9)}
-.effect small{display:block;margin-top:7px;font-size:15px;color:#b7ffe1;text-shadow:0 2px 8px #123453;letter-spacing:.02em}.effect.show{animation:floatUp .86s ease-out both}@keyframes floatUp{0%{opacity:0;transform:translateY(16px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.08)}75%{opacity:1;transform:translateY(-10px) scale(1)}100%{opacity:0;transform:translateY(-35px) scale(1)}}
+.effect{position:absolute;z-index:3;top:14%;left:0;right:0;text-align:center;font-size:28px;line-height:1.2;font-weight:1000;color:#fff0a6;text-shadow:0 3px 0 #9f6c63,0 8px 22px #23274f;letter-spacing:.04em;pointer-events:none;opacity:0;transform:translateY(15px) scale(.9)}
+.effect small{display:block;margin-top:7px;font-size:15px;color:#b7ffe1;text-shadow:0 2px 8px #123453;letter-spacing:.02em}.effect.show{animation:floatUp .86s ease-out both}@keyframes floatUp{0%{opacity:0;transform:translateY(16px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.08)}75%{opacity:1;transform:translateY(-10px) scale(1)}100%{opacity:0;transform:translateY(-14px) scale(1)}}
 .overlay{position:absolute;z-index:5;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;background:linear-gradient(180deg,#18234283,#171b42af)}.overlay[hidden]{display:none}
 .panel{text-align:center;width:100%;max-width:330px;border-radius:24px;border:1px solid #ceeaff77;background:linear-gradient(160deg,#24345cec,#1c2747ee);padding:24px 19px;box-shadow:0 22px 45px #0a1238a0}
 .badge{display:inline-block;background:#fff0aa;color:#685126;padding:5px 12px;border-radius:99px;font-size:11px;letter-spacing:.1em;font-weight:1000;margin-bottom:10px}
@@ -128,7 +127,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 <body>
 <main class="wrap">
   <header><div><div class="eyebrow">MINI GAME 01 · <span id="ver"></span></div><h1>Tip Top <em>Tower</em></h1></div><div class="best"><small id="lblBest">BEST SCORE</small><strong id="best">0</strong></div></header>
-  <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong><span class="plus" id="scorePlus"></span></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
+  <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
   <section class="stage" id="stage" aria-label="3Dブロック積みゲーム">
     <canvas id="game" width="720" height="1000" aria-label="画面タップで移動中の3Dブロックを落とす" tabindex="0"></canvas>
     <div class="bar"><div id="timebar"></div><div id="timebar2"></div></div>
@@ -150,7 +149,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.20.2';
+const VERSION='v0.20.3';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -409,14 +408,12 @@ function applySky(m){if(Math.abs(m-skyShown)<.5)return;skyShown=m;let i=0;while(
 const nearAngle=a=>a+Math.PI*2*Math.round((camAz-a)/(Math.PI*2));
 // できたタワーを見る：全体が入るまでカメラを引いて、ゆっくり回す
 function viewTower(){if(state!=='over')return;viewing=true;el.overlay.hidden=true;const top=stack.length*H;camTarget=top/2;camDistT=Math.max(CAM_DIST,(top/2+2.5)*2.35);camLiftT=camDistT*.28;setText(el.hint,'タップで結果にもどる');updateHud()}
-function closeView(){viewing=false;el.overlay.hidden=false;menuShownAt=performance.now();camTarget=Math.max(1.8,(stack.length-5.5)*H+1.8);camDistT=CAM_DIST;camLiftT=CAM_LIFT;camAzTarget=nearAngle(ANGLES[angleChoice]);setText(el.hint,'TRY AGAIN',['#eef9ff'],{flat:1});updateHud()}
+function closeView(){viewing=false;el.overlay.hidden=false;menuShownAt=performance.now();camTarget=Math.max(1.8,(stack.length-4.5)*H+1.8);camDistT=CAM_DIST;camLiftT=CAM_LIFT;camAzTarget=nearAngle(ANGLES[angleChoice]);setText(el.hint,'TRY AGAIN',['#eef9ff'],{flat:1});updateHud()}
 // バッジ一覧：取ったものはアイコンと名前、まだのものは取り方を表示。今回取ったものは光らせる
 let badgeFrom=null;
 function openBadges(from){badgeFrom=from;from.hidden=true;$('badgePanel').hidden=false;blockText($('badgeTitle'),'BADGES');$('badgeCount').textContent='あつめたバッジ '+badges.size+' / '+BADGES.length;
  $('badgeGrid').innerHTML=BADGES.map(([id,icon,name,how])=>{const got=badges.has(id);return '<div class="bitem'+(got?'':' locked')+(newBadges.includes(id)?' new':'')+'"><i>'+(got?icon:'？')+'</i>'+(got?name:how)+'</div>'}).join('')}
 function closeBadges(){$('badgePanel').hidden=true;if(badgeFrom)badgeFrom.hidden=false}
-// 置いたときの点数：タワーではなく、上の SCORE 欄のそばに小さく出す
-function plusScore(n){const e=$('scorePlus');e.textContent='+'+n;e.classList.remove('show');void e.offsetWidth;e.classList.add('show')}
 function fx(message,col='#fff0a5',detail=''){ setText($('effect-title'),message.replace('×','X'),[col]); $('effect-detail').textContent=detail;el.effect.style.color=col;el.effect.classList.remove('show');void el.effect.offsetWidth;el.effect.classList.add('show')}
 function flashTime(){const stat=el.time.parentElement;stat.classList.remove('bonus-flash');void stat.offsetWidth;stat.classList.add('bonus-flash')}
 const fmtSec=n=>Math.round(n*10)/10;
@@ -432,9 +429,9 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  // 得点の倍率は、いまは無し（最後に調整する）。磁石は判定が3倍ゆるい＝吸い付く
  const kind=moving.kind,wasWind=moving.wind,hurryNow=isHurry(),hStart=stack.length-1,isPerfect=Math.abs(delta)<=(kind==='magnet'?tolerance*3:tolerance);let block,title,color,detail,rocket=0;
  if(isPerfect){block={...moving,x:prev.x,z:prev.z,w:prev.w,d:prev.d,perfect:true};combo++;maxCombo=Math.max(maxCombo,combo);perfects++;
- const points=20+Math.min(4,combo-1)*10,requestedTime=isStage()?0:1+Math.min(2,combo-1);score+=points;plusScore(points);
+ const points=20+Math.min(4,combo-1)*10,requestedTime=isStage()?0:1+Math.min(2,combo-1);score+=points;
  const before=elapsed;elapsed=Math.max(MAX_TIME-TIME_CAP,elapsed-requestedTime);const gained=before-elapsed;bonusSeconds+=gained;
- title=kind==='magnet'?'MAGNET!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='magnet'?'#ff8a96':'#fff0a5';detail=gained>0?'＋'+fmtSec(gained)+'秒':'';// 点数はタワーの上ではなく SCORE 欄のそばに出す（plusScore）
+ title=kind==='magnet'?'MAGNET!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='magnet'?'#ff8a96':'#fff0a5';detail='+'+points+'点'+(gained>0?'  ＋'+fmtSec(gained)+'秒':'');
  // ロケット：PERFECTで置くと、同じ形のブロックがさらに2段いっきに積み上がる（1回で3段＝30m）
  if(kind==='gold')rocket=2;
  // ふくらむブロック：幅・奥行きを少し取り戻す
@@ -455,7 +452,7 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  if(cut>.002){const cutCenter=delta>0?right0+cut/2:left0-cut/2;let cx=moving.x,cz=moving.z;if(axis==='x')cx=cutCenter;else cz=cutCenter;
  addFalling(cx,cz,axis==='x'?cut:moving.w,axis==='z'?cut:moving.d,moving.y,moving.color,delta>0?1:-1,axis)}
  if(kind==='thunder')burnSparks(axis,delta>0?right:left0,delta>0?right0:left,block);
- combo=0;const points=10;score+=points;plusScore(points);const zap=kind==='thunder';title=zap?'ZAP!':'';color=zap?'#ffe066':'#cff4ff';detail='';beep(zap?'zap':'land')}
+ combo=0;const points=10;score+=points;const zap=kind==='thunder';title=zap?'ZAP!':'+'+points;color=zap?'#ffe066':'#cff4ff';detail=zap?'+'+points:'';beep(zap?'zap':'land')}
  delete block.axis;delete block.dir;delete block.speed;delete block.kind;delete block.wind;block.born=clock;stack.push(block);residents+=residentsOf(block);moving=null;
  if(rocket){for(let i=1;i<=rocket;i++){const nb={...block,y:block.y+i*H,born:clock+i*.12,appear:clock+i*.12,perfect:true};stack.push(nb);residents+=residentsOf(nb);confetti(nb)}
   perfects+=rocket;// レビュー2回目-2：★判定（PERFECT率＝PERFECT回数÷段数）がロケットで下がらないように
@@ -467,7 +464,7 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  const lm=LANDMARKS.filter(([m])=>m>hStart*FLOOR_M&&m<=h*FLOOR_M).pop();
  if(lm){detail=h*FLOOR_M+'m到達！'+(title?'  '+title:'')+(detail?' '+detail:'');title=lm[1]+' 超え！';color='#a8f0ff';beep('landmark')}
  else if(!isStage()&&bestHeight>0&&hStart<=bestHeight&&h>bestHeight){detail=title+(detail?' '+detail:'');title='自己ベスト超え！';color='#ffe08a';beep('landmark')}
- camTarget=Math.max(1.8,(stack.length-5.5)*H+1.8);
+ camTarget=Math.max(1.8,(stack.length-4.5)*H+1.8);
  // ステージ：ゴールの高さに着いたらクリア（少し間をおいて結果へ）
  if(isStage()&&h>=goalFloors(stageIdx)){fx('STAGE CLEAR!','#7dffb0',STAGES[stageIdx].name+'に到達！');beep('landmark');state='ending';endsIn=1.1;endReason='clear';updateHud();return}
  if(title)fx(title,color,detail);newMoving();if(rocket&&moving)moving.appear=clock+.12*rocket+.18;updateHud()}
@@ -564,7 +561,6 @@ function windows(b,eye){const a=Math.min(1,(clock-b.born)*2.5);if(a<=0)return;
  for(const s of [1,-1]){
   const fz=b.z+s*(b.d/2+t/2);if(s*(eye[2]-fz)>0)for(let i=0;i<nx;i++)box(b.x-b.w/2+b.w*(i+.5)/nx,b.y,fz,sx,wh,t,col,a,false);
   const fx_=b.x+s*(b.w/2+t/2);if(s*(eye[0]-fx_)>0)for(let i=0;i<nz;i++)box(fx_,b.y,b.z-b.d/2+b.d*(i+.5)/nz,t,wh,sz,col,a,false)}}
-let fxTop=-1;
 function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;boxRecords.length=0;transBoxes.length=0;// R15：配列は作り直さず中身だけ空にする
  // A perspective camera circles the tower: geometry really has depth, not 2D isometric sprites.
  const eye=[Math.sin(camAz)*camDist,camY+camLift+Math.sin(clock*48)*camShake*.35,Math.cos(camAz)*camDist];// ロケットのときだけ少し揺れる
@@ -595,8 +591,6 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  for(const s of sparks){const z=s.size||.09;box(s.x,s.y,s.z,z,z,z,s.color,Math.min(1,s.life*1.8),false)}
  const rectAspect=cv.width/cv.height;
  const look=[0,camY,0];const vp=m4mul(perspective(48*Math.PI/180,rectAspect,.1,400),lookAt(eye,look));
- // PERFECTなどの文字：いちばん上の段より3〜4段下（タワーの胴体）に出す。動くブロックと重ならないように（画面の40〜76%の間）
- {const tp=stack[stack.length-1],py=tp.y-H*3.5,cw=vp[3]*tp.x+vp[7]*py+vp[11]*tp.z+vp[15],cy=(vp[1]*tp.x+vp[5]*py+vp[9]*tp.z+vp[13])/cw,ft=Math.round(Math.max(40,Math.min(76,(1-cy)/2*100)));if(ft!==fxTop){fxTop=ft;el.effect.style.top=ft+'%'}}
  if(!gl){drawFallback(vp,eye);return;}if(glLost)return;
  // R06：半透明の箱を、カメラから遠い順に頂点にする
  transBoxes.sort((a,b)=>((b[0]-eye[0])**2+(b[1]-eye[1])**2+(b[2]-eye[2])**2)-((a[0]-eye[0])**2+(a[1]-eye[1])**2+(a[2]-eye[2])**2));

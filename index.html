@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.21.1">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.21.1">
-<link rel="manifest" href="manifest.webmanifest?v=0.21.1">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.21.2">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.21.2">
+<link rel="manifest" href="manifest.webmanifest?v=0.21.2">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -153,7 +153,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.21.1';
+const VERSION='v0.21.2';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -404,10 +404,11 @@ function reset(preview=false){state=preview?'ready':'playing';setFog(!preview);m
  updateHud()}
 // 霧の濃さ（ステージの fog：0〜3）。遊んでいる間だけ
 // 霧（ステージの fog：0〜3）。動くブロックは、タワーの真ん中から離れると霧に溶けて見えなくなる。
-// 見えるのは真ん中から FOG_CLEAR の距離まで（うすい2.6／ふつう1.9／こい1.3。端までは6.6）。画面の白い層は雰囲気だけ
-let fogLevel=0;const FOG_CLEAR=[99,2.6,1.9,1.3],FOG_COLOR='#eef0f6';
+// はっきり見えるのは真ん中から FOG_CLEAR の距離まで（うすい3.4／ふつう2.8／こい2.2。端までは6.6）。そこから1.6かけて薄くなり、
+// 端でも FOG_MIN の濃さでうっすら影が見える。画面の白い層は雰囲気だけ
+let fogLevel=0;const FOG_CLEAR=[99,3.4,2.8,2.2],FOG_MIN=[1,.3,.22,.15],FOG_COLOR='#eef0f6';
 function setFog(on){fogLevel=on&&isStage()?(STAGES[stageIdx].fog||0):0;$('fog').style.opacity=[0,.45,.6,.75][fogLevel]}
-function fogVis(){if(!fogLevel||!moving)return 1;const d=Math.abs(moving[moving.axis]-stack[stack.length-1][moving.axis]);return Math.max(0,Math.min(1,1-(d-FOG_CLEAR[fogLevel])/1.1))}
+function fogVis(){if(!fogLevel||!moving)return 1;const d=Math.abs(moving[moving.axis]-stack[stack.length-1][moving.axis]);return Math.max(FOG_MIN[fogLevel],Math.min(1,1-(d-FOG_CLEAR[fogLevel])/1.6))}
 function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
 // ステージ選択：★の数と、まだ遊べないステージは🔒
 // ステージ選択：ステージ1を一番下に、タワーのように積み上げる。開くたびに下から落ちてきて積み上がる
@@ -613,11 +614,11 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*(moving.kind==='thunder'?28:10))+1)/2):moving.color;
   const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/tripLimit()-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
   const fv=fogVis();if(fv<1)col=mixHex(col,FOG_COLOR,(1-fv)*.6);// 霧：真ん中から離れるほど白くかすんで消える
-  const ga=(moving.kind==='ghost'?ghostAlpha():1)*fv;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:ga>.98?1:ga);
+  const ga=(moving.kind==='ghost'?ghostAlpha():1)*fv;if(ga>.02){const a=moving.kind==='ghost'?.8*ga:ga>.98?1:ga;if(a<1)box(moving.x,moving.y+.015,moving.z,moving.w,H-.03,moving.d,col,a);else box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,1)}
   // ミニ：PERFECTで戻る「元の大きさ」を白い枠で見せる。この枠を下の段にぴったり重ねるつもりでタップすればよい
   if(moving.kind==='mini'){const pv=stack[stack.length-1];box(moving.x,moving.y,moving.z,pv.w,H*.96,pv.d,'#ffffff',.26+.1*Math.sin(clock*6))}
   // 特殊ブロックの上面に、白いドット絵のマーク
-  const mk=KIND_MARKS[moving.kind];if(mk&&ga>.02){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.035;
+  const mk=KIND_MARKS[moving.kind];if(mk&&ga>.02){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.045;/* 上の面とぴったり重ならないよう少し浮かせる（ちらつき対策） */
    mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,(KINDS[moving.kind].mark||'#ffffff'),ga,false)}))}}
  // お守り：持っている数だけ、動くブロックより上でピンクのキューブが小さく回る
  if(charms>0&&!viewing){const top=stack[stack.length-1];for(let i=0;i<charms;i++){const a=clock*1.8+i*Math.PI*2/charms;box(Math.cos(a)*1.6,top.y+H*4.2+Math.sin(clock*3+i)*.12,Math.sin(a)*1.6,.34,.34,.34,'#ff8fd0',1)}}

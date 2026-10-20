@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.18.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.18.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.18.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.19.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.19.0">
+<link rel="manifest" href="manifest.webmanifest?v=0.19.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -67,7 +67,8 @@ button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
 #startBtn{--face:#ffb2a8}
 #nextBtn{--face:#84e3c9;background:var(--face);--top:#c9f5e9;--side:#4f9e88}
 .sub{background:#2b3d68;--top:#41598f;--side:#18223f;margin-top:calc(var(--d) + 8px);color:#eef4ff}
-.controls button{background:#263455;--d:5px;--top:#3a4e80;--side:#141c36;margin-top:6px}
+#timebar2{position:absolute;top:0;left:0;width:0;background:linear-gradient(90deg,#ffe066,#ffb347)!important}/* R18：60秒を超えた分 */
+.controls button{background:#263455;--d:5px;--top:#3a4e80;--side:#141c36;margin-top:6px;min-height:44px}/* R13 */
 .result>div{border-radius:0;border:1.5px solid #ffffff40;background:#101b38;box-shadow:1px -1px 0 #2a3a66,2px -2px 0 #2a3a66,3px -3px 0 #22305a}
 .bitem{border-radius:0!important}
 .stars-big{font-size:28px;line-height:1.1;color:#ffd34d;text-shadow:2px -2px 0 #b8892a;letter-spacing:6px;margin:0 0 4px}
@@ -128,7 +129,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
   <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
   <section class="stage" id="stage" aria-label="3Dブロック積みゲーム">
     <canvas id="game" width="720" height="1000" aria-label="画面タップで移動中の3Dブロックを落とす" tabindex="0"></canvas>
-    <div class="bar"><div id="timebar"></div></div>
+    <div class="bar"><div id="timebar"></div><div id="timebar2"></div></div>
     <div class="stage-top"><span class="pill" id="goal">1段＝10m</span><span class="pill" id="level">LEVEL 1</span></div>
     <div class="effect" id="effect" aria-live="polite"><span id="effect-title"></span><small id="effect-detail"></small></div>
     <div class="bottom-hint" id="bottomHint">TAP TO STACK</div>
@@ -147,7 +148,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.18.0';
+const VERSION='v0.19.0';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -170,15 +171,42 @@ const VERSION='v0.18.0';
   4. ←キーと→キーが同じ向きに回る → 対応（v0.18.0）。←は逆回り。
   5. 新しい特殊ブロック5種のバッジがない → 対応（v0.18.0）。磁石・ワープ・おばけ・雷・ミニのバッジを追加（全22種）。
 */
+/* ===== 外部コードレビュー 3回目（v0.18.0 が対象、2026-10-21。GPT：R01〜R18、Gemini）への回答 =====
+  R01 メニュー中に CAMERA を押しても3D画面が止まっていて回らない → 対応：視点変更したら描画を再開。
+  R02 お守りで助かったミスがあっても「3分間ミスせず」バッジが取れる → 対応：ミス回数（missCount）を数え、0回のときだけ。
+  R03 1フレームの経過時間を0.04秒で打ち切っていたため、重い端末では制限時間が実質のびる → 対応：
+      ブロックの動きは今まで通り（打ち切りあり）、制限時間・プレイ時間は実際の経過時間（0.25秒で打ち切り）で数える。
+  R04 GPU を取り上げられる（webglcontextlost）と画面が戻らない → 対応：描画の準備を initGL() にまとめ、戻ってきたら作り直す。
+  R05 2D の代わり描画のときも WebGL 用の頂点を作っていた → 対応：WebGL が無いときは記録だけして頂点を作らない。
+  R06 半透明のもの同士を遠い順に描いていなかった → 対応：半透明の箱はいったん集めて、カメラから遠い順に描く。
+  R07 2D の代わり描画で、箱の間の前後が崩れることがある → 対応：箱を遠い順に並べ替えてから、箱の中の面も遠い順に描く。
+  R08 ステージ4の初登場のふくらむブロックが、土台が最大幅だと効果が見えない → 対応：細くなってから初登場させる。
+  R09 PERFECT の判定幅（0.15）は最高速だと約2フレーム → 見送り：ゲームバランスなので、実機で遊んでから決める。
+  R10 数字欄を毎フレーム書き換えている → 対応：値が変わったときだけ書き換える。
+  R11 「オフライン対応」なのにオフラインで起動できない → 対応：sw.js（サービスワーカー）を追加。ネット優先で、
+      つながらないときだけ保存しておいたファイルを使う（更新がすぐ反映されるように）。
+  R12 画面の拡大が禁止されている → 対応：user-scalable=no を外す（ダブルタップ拡大は touch-action で防ぐ）。
+  R13 下のボタンが小さい → 対応：高さ44px以上に。
+  R14 状態・判定・描画・音・画面が1つの関数の中に密集 → 見送り：作り直しの規模が大きいので、ステージ量産の前の区切りで検討。
+  R15 faces などの配列を毎フレーム作り直している → 対応：length=0 で中身だけ空にして使い回す。
+  R16 CSS の古い指定の重なり → 見送り（前回と同じ理由）。
+  R17 保存された★の数を検査していない → 対応：0〜3 の整数に収める。
+  R18 残り時間が60秒を超えた分がバーに出ない → 対応：超えた分（最大80秒）を金色のバーで重ねて表示。
+  Gemini：状態のオブジェクト化・設定値の一元化 → 見送り（R14 と同じ）。ロケットの爽快感 → 対応：積み上がるときにカメラが揺れる。
+          エンドレス後半の緊張感 → 対応：高く積むほど雷・おばけ・ミニが少しずつ出やすくなる。README → 遊び方・ホーム画面追加などを追記。
+*/
 const $=id=>document.getElementById(id);const cv=$('game');$('ver').textContent=VERSION;
 const gl=cv.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:false})||cv.getContext('experimental-webgl',{antialias:true,alpha:true});
 const fallbackCtx=gl?null:cv.getContext('2d');
 const shader=(type,source)=>{const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s};
-const vs=gl?shader(gl.VERTEX_SHADER,'attribute vec3 aPosition; attribute vec4 aColor; uniform mat4 uViewProjection; varying vec4 vColor; void main(){gl_Position=uViewProjection*vec4(aPosition,1.0);vColor=aColor;}'):null;
-const fs=gl?shader(gl.FRAGMENT_SHADER,'precision mediump float; varying vec4 vColor; void main(){gl_FragColor=vColor;}'):null;
-const program=gl?gl.createProgram():null;if(gl){gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program)}
-const aPosition=gl?gl.getAttribLocation(program,'aPosition'):-1,aColor=gl?gl.getAttribLocation(program,'aColor'):-1,uVP=gl?gl.getUniformLocation(program,'uViewProjection'):null;
-const faceBuffer=gl?gl.createBuffer():null,lineBuffer=gl?gl.createBuffer():null;if(gl){gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0)}
+let program=null,aPosition=-1,aColor=-1,uVP=null,faceBuffer=null,lineBuffer=null,glLost=false;
+// R04：描画の準備（シェーダー・バッファ）を関数にまとめ、GPU を取り上げられて戻ってきたときに作り直す
+function initGL(){const vs=shader(gl.VERTEX_SHADER,'attribute vec3 aPosition; attribute vec4 aColor; uniform mat4 uViewProjection; varying vec4 vColor; void main(){gl_Position=uViewProjection*vec4(aPosition,1.0);vColor=aColor;}'),
+ fs=shader(gl.FRAGMENT_SHADER,'precision mediump float; varying vec4 vColor; void main(){gl_FragColor=vColor;}');
+ program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program);
+ aPosition=gl.getAttribLocation(program,'aPosition');aColor=gl.getAttribLocation(program,'aColor');uVP=gl.getUniformLocation(program,'uViewProjection');
+ faceBuffer=gl.createBuffer();lineBuffer=gl.createBuffer();gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0)}
+if(gl){initGL();cv.addEventListener('webglcontextlost',e=>{e.preventDefault();glLost=true});cv.addEventListener('webglcontextrestored',()=>{initGL();glLost=false;fit();if(typeof menuShownAt!=='undefined')menuShownAt=performance.now()})}
 const m4mul=(a,b)=>{const o=new Float32Array(16);for(let i=0;i<4;i++)for(let j=0;j<4;j++)for(let k=0;k<4;k++)o[i+j*4]+=a[i+k*4]*b[k+j*4];return o};
 const perspective=(fov,aspect,n,f)=>{const m=new Float32Array(16),q=1/Math.tan(fov/2);m[0]=q/aspect;m[5]=q;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=(2*f*n)/(n-f);return m};
 function lookAt(e,t){const norm=v=>{const l=Math.hypot(...v)||1;return v.map(x=>x/l)};const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];const z=norm(e.map((x,i)=>x-t[i])),x=norm(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-x.reduce((s,v,i)=>s+v*e[i],0),-y.reduce((s,v,i)=>s+v*e[i],0),-z.reduce((s,v,i)=>s+v*e[i],0),1])}
@@ -205,7 +233,8 @@ const KIND_MARKS={gold:['00100','01110','11111','00100','00100'],ice:['10101','0
  magnet:['10001','10001','10001','10001','01110'],warp:['01000','11111','00000','11111','00010'],ghost:['00000','01010','01010','00000','01110'],
  thunder:['00110','01100','11111','00110','01100'],mini:['00000','01110','01010','01110','00000']};
 // エンドレスでの出やすさ（3段目から）。ミニは15段目から・下が太いときだけ、ふくらむは細いときだけ
-function pickKind(r,thin,level){const t=[['gold',.06],['ice',.05],['magnet',.06],['warp',.05],['ghost',.04],['thunder',.04]];if(level>=15&&!thin)t.push(['mini',.04]);if(thin)t.push(['grow',.10]);
+function pickKind(r,thin,level){const up=Math.min(1,Math.max(0,(level-10)/40));// 10段目から50段目にかけて0→1
+ const t=[['gold',.06],['ice',.05],['magnet',.06],['warp',.05],['ghost',.03+.03*up],['thunder',.03+.04*up]];if(level>=15&&!thin)t.push(['mini',.03+.04*up]);if(thin)t.push(['grow',.10]);
  let a=0;for(const [k,q] of t){a+=q;if(r<a)return k}return ''}
 // おばけの見え方：見える→フッと消える→また現れる をくり返す（1周約1.3秒）
 function ghostAlpha(){const ph=(clock*.75)%1;return ph<.55?1:ph<.65?1-(ph-.55)/.1:ph<.9?0:(ph-.9)/.1}
@@ -226,7 +255,7 @@ const STAGES=[
  {name:'自由の女神',m:93,kinds:[],wind:false,intro:'まずは練習！\nブロックは1往復するまでに置こう。\n赤く光ったら急いで！'},
  {name:'牛久大仏',m:120,kinds:['gold'],wind:false,first:'gold',intro:'新登場：ロケットブロック\n青いブロックをPERFECTで置くと、さらに2段いっきに積み上がる！（1回で3段）'},
  {name:'東京都庁',m:243,kinds:['gold','ice'],wind:false,first:'ice',intro:'新登場：氷ブロック\n水色の氷ブロックは、いつもより速く動く'},
- {name:'あべのハルカス',m:300,kinds:['gold','ice','grow'],wind:false,first:'grow',intro:'新登場：ふくらむブロック\n緑のブロックをPERFECTで置くと太くなる'},
+ {name:'あべのハルカス',m:300,kinds:['gold','ice','grow'],wind:false,first:'grow',intro:'新登場：ふくらむブロック\nタワーが細くなると緑のブロックが出てくる。PERFECTで置くと太くなる'},
  {name:'東京タワー',m:333,kinds:['gold','ice','grow'],wind:true,intro:'新登場：風\n10段ごとに風がふく。\n白い線と同じ向きに動くと速く、逆だと遅い'}];
 const goalFloors=i=>Math.ceil(STAGES[i].m/FLOOR_M);
 // 1往復の長さ：端から反対の端へ行って戻るまで
@@ -263,8 +292,11 @@ const themeForStage=i=>i===0?THEMES[0]:THEMES[1+((i*7+3)%(THEMES.length-1))];
 function pickTheme(preview){if(preview)return THEMES[0];if(isStage())return themeForStage(stageIdx);return THEMES[Math.floor(Math.random()*THEMES.length)]}
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
 const mixHex=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(255*(v+(B[i]-v)*t)).toString(16).padStart(2,'0')).join('')};
-let faces=[],edges=[],facesT=[],edgesT=[],boxRecords=[];
-function box(x,y,z,w,h,d,color,alpha=1,drawEdges=true){if(w<=.003||h<=.003||d<=.003)return;boxRecords.push({x,y,z,w,h,d,color,alpha,drawEdges});const F=alpha<1?facesT:faces,E=alpha<1?edgesT:edges;
+let faces=[],edges=[],facesT=[],edgesT=[],boxRecords=[],transBoxes=[],transNow=false;
+function box(x,y,z,w,h,d,color,alpha=1,drawEdges=true){if(w<=.003||h<=.003||d<=.003)return;
+ if(!gl){boxRecords.push({x,y,z,w,h,d,color,alpha,drawEdges});return}// R05：2Dの代わり描画では記録だけ（頂点は作らない）
+ if(alpha<1&&!transNow){transBoxes.push([x,y,z,w,h,d,color,alpha,drawEdges]);return}// R06：半透明はあとで遠い順に描く
+ const F=alpha<1?facesT:faces,E=alpha<1?edgesT:edges;
  const X0=x-w/2,X1=x+w/2,Y0=y-h/2,Y1=y+h/2,Z0=z-d/2,Z1=z+d/2;
  const p=[[X0,Y0,Z0],[X1,Y0,Z0],[X1,Y1,Z0],[X0,Y1,Z0],[X0,Y0,Z1],[X1,Y0,Z1],[X1,Y1,Z1],[X0,Y1,Z1]];
  const col=rgb(color),fdefs=[[[4,5,6,7],.88],[[1,0,3,2],.65],[[0,4,7,3],.73],[[5,1,2,6],.97],[[3,7,6,2],1.22],[[0,1,5,4],.50]];
@@ -281,26 +313,30 @@ let badges=new Set(),newBadges=[];try{badges=new Set(JSON.parse(read('pittariTow
 // バッジはプレイ中は知らせず、結果画面でまとめて見せる（プレイ中は画面を見る余裕がないため）
 function award(id){if(badges.has(id)||!BADGES.some(b=>b[0]===id))return;badges.add(id);newBadges.push(id);write('pittariTower3D.badges',JSON.stringify([...badges]))}
 // ステージごとの最高★（0＝未クリア）。前のステージを★1以上でクリアすると次が遊べる
-let stageStars=STAGES.map(()=>0);try{const s=JSON.parse(read('pittariTower3D.stageStars','[]'));stageStars=STAGES.map((_,i)=>Number(s[i])||0)}catch{}
+let stageStars=STAGES.map(()=>0);try{const s=JSON.parse(read('pittariTower3D.stageStars','[]'));stageStars=STAGES.map((_,i)=>Math.max(0,Math.min(3,Math.floor(Number(s[i])||0))))/* R17 */}catch{}
 let mode='endless',stageIdx=0,endReason='miss';
 const isStage=()=>mode==='stage';
 const unlocked=i=>i===0||stageStars[i-1]>0;
 let state='ready',stack=[],moving=null,falling=[],sparks=[],score=0,combo=0,maxCombo=0,perfects=0,bonusSeconds=0,residents=0,elapsed=0,totalPlayed=0,endsIn=0,last=0,clock=0,camY=1.8,camTarget=1.8,camAz=0.55,camAzTarget=0.55,angleChoice=0,
  viewing=false,camDist=CAM_DIST,camDistT=CAM_DIST,camLift=CAM_LIFT,camLiftT=CAM_LIFT,charms=0,sparkTimer=0,winds=[],windTimer=0,skyM=0,skyShown=-1;
-const el={height:$('height'),score:$('score'),combo:$('combo'),time:$('time'),best:$('best'),level:$('level'),bar:$('timebar'),overlay:$('overlay'),start:$('startPanel'),end:$('endPanel'),effect:$('effect'),tip:$('tip'),sound:$('sound'),hint:$('bottomHint'),goal:$('goal'),stage:$('stage'),stagePanel:$('stagePanel'),intro:$('introPanel'),badgePanel:$('badgePanel'),rules:$('rulesPanel')};
+const el={height:$('height'),score:$('score'),combo:$('combo'),time:$('time'),best:$('best'),level:$('level'),bar:$('timebar'),bar2:$('timebar2'),overlay:$('overlay'),start:$('startPanel'),end:$('endPanel'),effect:$('effect'),tip:$('tip'),sound:$('sound'),hint:$('bottomHint'),goal:$('goal'),stage:$('stage'),stagePanel:$('stagePanel'),intro:$('introPanel'),badgePanel:$('badgePanel'),rules:$('rulesPanel')};
 const remaining=()=>Math.max(0,Math.min(MAX_TIME-elapsed,RUN_CAP-totalPlayed));
 const isHurry=()=>!isStage()&&state==='playing'&&remaining()<HURRY;
 // オーバーレイに出すパネルを1つだけにする（null なら全部隠す）
 let menuShownAt=0;
 function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel,el.rules])q.hidden=q!==p;el.overlay.hidden=!p}
 const meters=()=>(stack.length-1)*FLOOR_M;
+// R10：値が変わったときだけ書き換える
+const setV=(e,v)=>{v=String(v);if(e._v!==v){e._v=v;e.textContent=v}};
 function updateHud(){const next=LANDMARKS.find(([m])=>m>(state==='ready'?0:meters())),st=STAGES[stageIdx],stg=isStage()&&state!=='ready';
- el.goal.textContent=state==='ready'?'1段＝10m':state==='over'?meters()+'m ／ 住人'+residents+'人':stg?meters()+'m ／ ゴール：'+st.name+' '+st.m+'m':meters()+'m ／ '+(next?'次：'+next[1]+' '+next[0]+'m':'てっぺん！');
- el.time.parentElement.classList.toggle('hurry',isHurry());
+ setV(el.goal,state==='ready'?'1段＝10m':state==='over'?meters()+'m ／ 住人'+residents+'人':stg?meters()+'m ／ ゴール：'+st.name+' '+st.m+'m':meters()+'m ／ '+(next?'次：'+next[1]+' '+next[0]+'m':'てっぺん！'));
+ const hu=isHurry();if(el.time._hu!==hu){el.time._hu=hu;el.time.parentElement.classList.toggle('hurry',hu)}
  // ステージ：時間の代わりに「ゴールまでのこり段」、上のバーは1往復の残り
- setText($('timeLabel'),stg?'LEFT':'TIME',['#becae2'],{flat:1});el.time.textContent=stg?Math.max(0,goalFloors(stageIdx)-(stack.length-1)):Math.ceil(remaining());
- el.bar.style.width=(stg?(moving?100*Math.max(0,1-moving.trip/TRIP):0):Math.min(100,100*remaining()/MAX_TIME))+'%';
-el.height.textContent=state==='ready'?0:stack.length-1;el.score.textContent=score;el.combo.textContent=combo;el.best.textContent=best;el.level.textContent=(stg?'STAGE '+(stageIdx+1):'LV '+(state==='ready'?1:stack.length))+(charms?' ・ お守り'+charms:'')}
+ setText($('timeLabel'),stg?'LEFT':'TIME',['#becae2'],{flat:1});setV(el.time,stg?Math.max(0,goalFloors(stageIdx)-(stack.length-1)):Math.ceil(remaining()));
+ const rem=remaining(),bw=(stg?(moving?100*Math.max(0,1-moving.trip/TRIP):0):Math.min(100,100*rem/MAX_TIME)).toFixed(1)+'%',
+  bw2=(!stg&&rem>MAX_TIME?100*Math.min(1,(rem-MAX_TIME)/(TIME_CAP-MAX_TIME)):0).toFixed(1)+'%';// R18：60秒を超えた分は金色
+ if(el.bar._w!==bw){el.bar._w=bw;el.bar.style.width=bw}if(el.bar2._w!==bw2){el.bar2._w=bw2;el.bar2.style.width=bw2}
+ setV(el.height,state==='ready'?0:stack.length-1);setV(el.score,score);setV(el.combo,combo);setV(el.best,best);setV(el.level,(stg?'STAGE '+(stageIdx+1):'LV '+(state==='ready'?1:stack.length))+(charms?' ・ お守り'+charms:''))}
 function newMoving(){const prev=stack[stack.length-1],level=stack.length,axis=level%2?'x':'z',positive=(level%4===2||level%4===3),side=positive?1:-1;
  moving={x:prev.x,z:prev.z,w:prev.w,d:prev.d,y:(level+.5)*H,color:theme.blocks[level%theme.blocks.length],axis,dir:-side,speed:Math.min(4.1+(level-1)*.28,8.7)};moving[axis]=side*(MARGIN+1.0);
  // 特殊ブロック（3段目から）：金＝PERFECTで3倍／氷＝速いけど2倍／緑＝PERFECTでふくらむ（細くなった時だけ）
@@ -308,14 +344,15 @@ function newMoving(){const prev=stack[stack.length-1],level=stack.length,axis=le
  moving.kind=level<3?'':pickKind(r,thin,level);moving.trip=0;
  // ステージ：そのステージで出せる仕掛けだけ。新登場の仕掛けは3段目で必ず1回見せる
  const st=STAGES[stageIdx];
- if(isStage()&&state==='playing'){if(!st.kinds.includes(moving.kind))moving.kind='';if(level===3&&st.first)moving.kind=st.first}
+ if(isStage()&&state==='playing'){if(!st.kinds.includes(moving.kind))moving.kind='';if(st.first&&!firstShown&&level>=3&&(st.first!=='grow'||thin)){moving.kind=st.first;firstShown=true}}// R08：ふくらむは細くなってから初登場（効果が見えるように）
  // 風の段（10段ごと）：ブロックが動く線に沿って片方向に吹く。特殊ブロックにはしない
  if(level>=WIND_EVERY&&level%WIND_EVERY===0&&(!isStage()||st.wind)){moving.kind='';moving.wind=Math.random()<.5?1:-1;if(state==='playing')beep('wind')}
  const k=KINDS[moving.kind];
  if(k){moving.color=k.color;if(moving.kind==='ice')moving.speed*=1.35;if(moving.kind==='mini'){moving.w*=.55;moving.d*=.55}if(state==='playing')beep('special')}}
 // 追い風（風と同じ向きに動く）は1.4倍、向かい風は0.6倍
 const windFactor=()=>moving&&moving.wind?(moving.dir===moving.wind?1.4:.6):1;
-function reset(preview=false){state=preview?'ready':'playing';theme=pickTheme(preview);stack=[{x:0,y:H/2,z:0,w:BASE,d:BASE,color:theme.blocks[0]}];moving=null;falling=[];sparks=[];score=0;combo=0;maxCombo=0;perfects=0;bonusSeconds=0;residents=0;elapsed=0;totalPlayed=0;endsIn=0;camY=1.8;camTarget=1.8;charms=0;viewing=false;camDist=camDistT=CAM_DIST;camLift=camLiftT=CAM_LIFT;camAzTarget=nearAngle(ANGLES[angleChoice]);winds=[];skyM=0;applySky(0);newBadges=[];endReason='miss';
+let missCount=0,firstShown=false,camShake=0;
+function reset(preview=false){state=preview?'ready':'playing';missCount=0;firstShown=false;camShake=0;theme=pickTheme(preview);stack=[{x:0,y:H/2,z:0,w:BASE,d:BASE,color:theme.blocks[0]}];moving=null;falling=[];sparks=[];score=0;combo=0;maxCombo=0;perfects=0;bonusSeconds=0;residents=0;elapsed=0;totalPlayed=0;endsIn=0;camY=1.8;camTarget=1.8;charms=0;viewing=false;camDist=camDistT=CAM_DIST;camLift=camLiftT=CAM_LIFT;camAzTarget=nearAngle(ANGLES[angleChoice]);winds=[];skyM=0;applySky(0);newBadges=[];endReason='miss';
  if(preview){mode='endless';for(let n=1;n<=3;n++){const w=BASE-.36*n;stack.push({x:.12*n,y:(n+.5)*H,z:-.1*n,w,d:w,color:theme.blocks[n%theme.blocks.length],born:-9,perfect:n===2})}newMoving();showPanel(el.start);if(logoLetters.length)logoIntro();setText(el.hint,'3D STACKING',['#eef9ff'],{flat:1});el.tip.textContent='PERFECTを続けると音がドレミと上がるよ！'}
  else{newMoving();showPanel(null);setText(el.hint,'TAP TO STACK',['#eef9ff'],{flat:1});
   el.tip.textContent=isStage()?'ゴール：'+STAGES[stageIdx].name+' '+STAGES[stageIdx].m+'m。ブロックは1往復するまでに置こう':'4連続PERFECTでお守りゲット（最大3分）';beep('start')}
@@ -391,7 +428,7 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  delete block.axis;delete block.dir;delete block.speed;delete block.kind;delete block.wind;block.born=clock;stack.push(block);residents+=residentsOf(block);moving=null;
  if(rocket){for(let i=1;i<=rocket;i++){const nb={...block,y:block.y+i*H,born:clock+i*.12,appear:clock+i*.12,perfect:true};stack.push(nb);residents+=residentsOf(nb);confetti(nb)}
   perfects+=rocket;// レビュー2回目-2：★判定（PERFECT率＝PERFECT回数÷段数）がロケットで下がらないように
-  title='ROCKET!';color='#8fc2ff';detail='+'+rocket+'段  '+detail;beep('rocket')}
+  camShake=.5;title='ROCKET!';color='#8fc2ff';detail='+'+rocket+'段  '+detail;beep('rocket')}
  // 実在の建物の高さを超えたら、その名前を大きく表示
  const h=stack.length-1;
  for(const [id,m] of [['h10',100],['tokyo',333],['sky',634],['burj',828]])if(h*FLOOR_M>=m)award(id);
@@ -404,11 +441,11 @@ function place(){if(state!=='playing'||!moving||moving.appear>clock)return;const
  if(isStage()&&h>=goalFloors(stageIdx)){fx('STAGE CLEAR!','#7dffb0',STAGES[stageIdx].name+'に到達！');beep('landmark');state='ending';endsIn=1.1;endReason='clear';updateHud();return}
  fx(title,color,detail);newMoving();if(rocket&&moving)moving.appear=clock+.12*rocket+.18;updateHud()}
 // 動いているブロックを落とす（ミス・時間切れ共通）。お守りがあれば1回だけセーフ
-function dropMoving(msg){const m=moving;addFalling(m.x,m.z,m.w,m.d,m.y,m.color,m.dir,m.axis);moving=null;combo=0;
+function dropMoving(msg){missCount++;/* R02 */const m=moving;addFalling(m.x,m.z,m.w,m.d,m.y,m.color,m.dir,m.axis);moving=null;combo=0;
  if(charms>0){charms--;award('charm');fx('セーフ！','#b7ffe1','お守りを1つ使ったよ（のこり'+charms+'）');beep('land');newMoving();updateHud();return}
  state='ending';endsIn=.72;endReason=msg==='MISS!'?'miss':'trip';fx(msg,'#ffabb4');beep('miss');updateHud()}
 function finish(reason){if(state==='over')return;
- const h=stack.length-1,st=STAGES[stageIdx],clear=reason==='clear';if(!isStage()&&totalPlayed>=RUN_CAP)award('full');
+ const h=stack.length-1,st=STAGES[stageIdx],clear=reason==='clear';if(!isStage()&&totalPlayed>=RUN_CAP&&missCount===0)award('full');// R02：お守りで助かったミスもミスとして数える
  state='over';moving=null;
  // ★：クリアで1つ、PERFECT率50%以上で2つ、70%以上で3つ（ステージのみ）
  const rate=h?perfects/h:0,stars=clear?(rate>=.7?3:rate>=.5?2:1):0;
@@ -438,8 +475,8 @@ function beep(kind,n=1){if(!soundOn)return;try{const AC=window.AudioContext||win
  playSound(kind,n)}catch{}}
 function playSound(kind,n){try{let t=audio.currentTime,notes=kind==='perfect'?scaleNotes(n):kind==='landmark'?[[784,.18,.1],[988,.28,.1],[1175,.38,.26]]:kind==='special'?[[1319,.22,.08],[1760,.3,.08],[2093,.38,.14]]:kind==='charm'?[[880,.12,.1],[1109,.2,.1],[1319,.28,.1],[1760,.36,.2]]:kind==='wind'?[[260,.2,.6]]:kind==='rocket'?[[330,.05,.45]]:kind==='zap'?[[1400,0,.2]]:kind==='miss'?[[245,0,.27]]:kind==='start'?[[1400,0,.07],[2000,.07,.09]]:[[420,0,.09]];
  for(const [f,delay,len]of notes){const o=audio.createOscillator(),g=audio.createGain();o.type=kind==='wind'||kind==='rocket'?'triangle':kind==='zap'?'square':'sine';o.frequency.setValueAtTime(f,t+delay);if(kind==='miss')o.frequency.exponentialRampToValueAtTime(110,t+delay+len);if(kind==='wind')o.frequency.exponentialRampToValueAtTime(820,t+delay+len*.6);if(kind==='start')o.frequency.exponentialRampToValueAtTime(f*.45,t+delay+len);if(kind==='rocket')o.frequency.exponentialRampToValueAtTime(1600,t+delay+len);if(kind==='zap')o.frequency.exponentialRampToValueAtTime(90,t+delay+len);g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(.08,t+delay+.012);g.gain.exponentialRampToValueAtTime(.0001,t+delay+len);o.connect(g);g.connect(audio.destination);o.start(t+delay);o.stop(t+delay+len+.025)}}catch{}}
-function update(dt){clock+=dt;
- if(state==='playing'){if(!isStage()){elapsed=Math.min(MAX_TIME,elapsed+dt);totalPlayed+=dt}
+function update(dt,rdt=dt){clock+=dt;
+ if(state==='playing'){if(!isStage()){elapsed=Math.min(MAX_TIME,elapsed+rdt);totalPlayed+=rdt}
   if(!isStage()&&(elapsed>=MAX_TIME||totalPlayed>=RUN_CAP)){finish('time')}
   else if(moving&&!(moving.appear>clock)){const step=moving.speed*windFactor()*dt;moving[moving.axis]+=moving.dir*step;moving.trip+=step;if(moving.kind==='warp'){if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=-MARGIN-1;warpBurst()}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=MARGIN+1;warpBurst()}}
    else if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=MARGIN+1;moving.dir=-1}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=-MARGIN-1;moving.dir=1}
@@ -450,6 +487,7 @@ function update(dt){clock+=dt;
  if(state==='ending'){endsIn-=dt;if(endsIn<=0)finish(endReason)}
  if(viewing){camAz+=dt*.45;camAzTarget=camAz}
  if(state!=='ready'){skyM+=(meters()-skyM)*Math.min(1,dt*1.5);applySky(skyM)}
+ camShake=Math.max(0,camShake-dt*1.4);
  const camK=Math.min(1,dt*(viewing?1.6:4));camY+=(camTarget-camY)*camK;camDist+=(camDistT-camDist)*camK;camLift+=(camLiftT-camLift)*camK;camAz+=(camAzTarget-camAz)*Math.min(1,dt*3);
  for(const b of falling){b.x+=b.vx*dt;b.z+=b.vz*dt;b.vy-=13*dt;b.y+=b.vy*dt;b.life-=dt}falling=falling.filter(b=>b.life>0&&b.y>camY-17);
  // 特殊ブロックのまわりに粒を出し続ける（金＝舞い上がる／氷＝こぼれ落ちる／緑＝ふわっと）
@@ -469,7 +507,9 @@ function drawFallback(vp,eye){
  const point=(x,y,z)=>{const w=vp[3]*x+vp[7]*y+vp[11]*z+vp[15];if(w<=.01)return null;return [(1+(vp[0]*x+vp[4]*y+vp[8]*z+vp[12])/w)*cssW/2,(1-(vp[1]*x+vp[5]*y+vp[9]*z+vp[13])/w)*cssH/2]};
  const defs=[[[4,5,6,7],[0,0,1],.88],[[1,0,3,2],[0,0,-1],.65],[[0,4,7,3],[-1,0,0],.73],[[5,1,2,6],[1,0,0],.97],[[3,7,6,2],[0,1,0],1.22],[[0,1,5,4],[0,-1,0],.5]];
  const polys=[];
- for(const b of boxRecords){const {x,y,z,w,h,d,color,alpha,drawEdges}=b;
+ // R07：箱ごとの前後が崩れないよう、箱をカメラから遠い順に並べ替える（箱の中の面はその中で遠い順）
+ const recs=boxRecords.map(b=>[b,(b.x-eye[0])**2+(b.y-eye[1])**2+(b.z-eye[2])**2]).sort((a,b)=>b[1]-a[1]);
+ for(const [b] of recs){const {x,y,z,w,h,d,color,alpha,drawEdges}=b;
    const X0=x-w/2,X1=x+w/2,Y0=y-h/2,Y1=y+h/2,Z0=z-d/2,Z1=z+d/2;
    const vertices=[[X0,Y0,Z0],[X1,Y0,Z0],[X1,Y1,Z0],[X0,Y1,Z0],[X0,Y0,Z1],[X1,Y0,Z1],[X1,Y1,Z1],[X0,Y1,Z1]];
    const [r,g,bl]=rgb(color);const boxPolys=[];
@@ -490,9 +530,9 @@ function windows(b,eye){const a=Math.min(1,(clock-b.born)*2.5);if(a<=0)return;
  for(const s of [1,-1]){
   const fz=b.z+s*(b.d/2+t/2);if(s*(eye[2]-fz)>0)for(let i=0;i<nx;i++)box(b.x-b.w/2+b.w*(i+.5)/nx,b.y,fz,sx,wh,t,col,a,false);
   const fx_=b.x+s*(b.w/2+t/2);if(s*(eye[0]-fx_)>0)for(let i=0;i<nz;i++)box(fx_,b.y,b.z-b.d/2+b.d*(i+.5)/nz,t,wh,sz,col,a,false)}}
-function render(){faces=[];edges=[];facesT=[];edgesT=[];boxRecords=[];
+function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;boxRecords.length=0;transBoxes.length=0;// R15：配列は作り直さず中身だけ空にする
  // A perspective camera circles the tower: geometry really has depth, not 2D isometric sprites.
- const eye=[Math.sin(camAz)*camDist,camY+camLift,Math.cos(camAz)*camDist];
+ const eye=[Math.sin(camAz)*camDist,camY+camLift+Math.sin(clock*48)*camShake*.35,Math.cos(camAz)*camDist];// ロケットのときだけ少し揺れる
  // Floating island & base pedestal, both genuine 3D cuboids.
  if(camY<8||viewing){box(0,-.55,0,8.6,.60,8.6,'#3c416e',1);box(0,-.20,0,8.15,.14,8.15,'#747fb5',1);box(0,-.11,0,5.75,.16,5.75,'#a5bce4',1)}
  for(const b of stack){if(b.appear&&clock<b.appear)continue;if(!viewing&&b.y<camY-16)continue;/* レビュー③：画面より下の階は描かない */box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
@@ -518,14 +558,18 @@ function render(){faces=[];edges=[];facesT=[];edgesT=[];boxRecords=[];
  for(const s of sparks){const z=s.size||.09;box(s.x,s.y,s.z,z,z,z,s.color,Math.min(1,s.life*1.8),false)}
  const rectAspect=cv.width/cv.height;
  const look=[0,camY,0];const vp=m4mul(perspective(48*Math.PI/180,rectAspect,.1,400),lookAt(eye,look));
- if(!gl){drawFallback(vp,eye);return;}gl.uniformMatrix4fv(uVP,false,vp);
+ if(!gl){drawFallback(vp,eye);return;}if(glLost)return;
+ // R06：半透明の箱を、カメラから遠い順に頂点にする
+ transBoxes.sort((a,b)=>((b[0]-eye[0])**2+(b[1]-eye[1])**2+(b[2]-eye[2])**2)-((a[0]-eye[0])**2+(a[1]-eye[1])**2+(a[2]-eye[2])**2));
+ transNow=true;for(const t of transBoxes)box(...t);transNow=false;
+ gl.uniformMatrix4fv(uVP,false,vp);
  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);drawBuffer(faceBuffer,faces,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edges,gl.LINES);
  // レビュー②：半透明のものは不透明なものの後に、奥行きを書き込まずに描く（後ろのブロックが抜けて見えないように）
  if(facesT.length||edgesT.length){gl.depthMask(false);gl.enable(gl.POLYGON_OFFSET_FILL);drawBuffer(faceBuffer,facesT,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edgesT,gl.LINES);gl.depthMask(true)}}
-function tick(t){let dt=Math.min((t-last)/1000||0,.04);last=t;
+function tick(t){const raw=last?(t-last)/1000:0,dt=Math.min(raw,.04),rdt=Math.min(raw,.25);last=t;// R03：動きは0.04秒で打ち切り、時間は実時間（0.25秒まで）
  // メニューが出ている間は、出てから2秒（落下中のブロックやカメラが落ち着くまで）で3D画面を止める＝タップの反応を軽くする
  const idle=!el.overlay.hidden&&(state==='ready'||state==='over')&&t-menuShownAt>2000;
- if(!idle){update(dt);render()}requestAnimationFrame(tick)}
+ if(!idle){update(dt,rdt);render()}requestAnimationFrame(tick)}
 // ===== タイトルロゴ：5×5マスのブロック文字。ゲームと同じ「上・前・横の3段階ベタ塗り＋細い白線」 =====
 const LOGO_FONT={T:['11111','00100','00100','00100','00100'],I:['111','010','010','010','111'],P:['11110','10001','11110','10000','10000'],
  O:['01110','10001','10001','10001','01110'],W:['10001','10001','10101','10101','01010'],E:['11111','10000','11110','10000','11111'],R:['11110','10001','11110','10010','10001'],
@@ -594,6 +638,8 @@ function popLetter(g){g.classList.remove('drop','pop');g.style.animationDelay='0
   const sp=svgEl('rect',{x:b.x+b.width/2-s/2,y:b.y+b.height*.3,width:s,height:s,fill:cols[i%cols.length],class:'sp',style:`--dx:${(Math.cos(a)*r).toFixed(1)}px;--dy:${(Math.sin(a)*r).toFixed(1)}px;--r:${(Math.random()*180-90).toFixed(0)}deg`},svg);
   setTimeout(()=>sp.remove(),800)}}
 buildLogo();
+// R11：オフラインでも起動できるように（https で公開しているときだけ）
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 // ===== ルール説明ページ =====
 const KIND_INFO=[['gold','ロケット','PERFECTで置くと、さらに2段いっきに積み上がる（1回で3段＝30m）'],['ice','氷','いつもより速く動く'],['grow','ふくらむ','PERFECTで置くと少し太くなる（細くなったときに出る）'],
  ['magnet','磁石','近くで止めると吸い付いてPERFECTになる'],['warp','ワープ','往復しないで、端まで行くと反対の端から出てくる'],['ghost','おばけ','動いている途中で、ときどきフッと消える'],
@@ -630,11 +676,11 @@ $('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);
 $('restart').addEventListener('click',()=>{if(state==='ready')return;reset(false)});$('viewBtn').addEventListener('click',viewTower);
 $('badgeBtnStart').addEventListener('click',()=>openBadges(el.start));$('badgeBtnEnd').addEventListener('click',()=>openBadges(el.end));$('badgeBack').addEventListener('click',closeBadges);
 $('rulesBtn').addEventListener('click',openRules);$('rulesBack').addEventListener('click',()=>showPanel(el.start));
-$('rotate').addEventListener('click',()=>{angleChoice=(angleChoice+1)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice])});
+$('rotate').addEventListener('click',()=>{angleChoice=(angleChoice+1)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice]);menuShownAt=performance.now()/* R01 */});
 $('sound').addEventListener('click',()=>{soundOn=!soundOn;write('pittariTower3D.sound',soundOn?'on':'off');setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));if(soundOn)beep('land')});
 cv.addEventListener('pointerdown',e=>{e.preventDefault();if(viewing)closeView();else place()},{passive:false});
 // レビュー⑥：キーボード操作（R＝やり直し、C／←→＝視点変更、Space／Enter＝置く・スタート）
-document.addEventListener('keydown',e=>{if(e.code==='KeyR'&&state!=='ready'){reset(false);return}if(e.code==='ArrowLeft'){angleChoice=(angleChoice+3)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice]);return}/* レビュー2回目-4：←は逆回り */if(e.code==='KeyC'||e.code==='ArrowRight'){$('rotate').click();return}if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
+document.addEventListener('keydown',e=>{if(e.code==='KeyR'&&state!=='ready'){reset(false);return}if(e.code==='ArrowLeft'){angleChoice=(angleChoice+3)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice]);menuShownAt=performance.now();return}/* レビュー2回目-4：←は逆回り */if(e.code==='KeyC'||e.code==='ArrowRight'){$('rotate').click();return}if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
 document.addEventListener('visibilitychange',()=>{last=0});setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));reset(true);requestAnimationFrame(tick);
 })();
 </script>

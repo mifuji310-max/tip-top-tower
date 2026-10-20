@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.21.2">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.21.2">
-<link rel="manifest" href="manifest.webmanifest?v=0.21.2">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.21.3">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.21.3">
+<link rel="manifest" href="manifest.webmanifest?v=0.21.3">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -153,7 +153,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.21.2';
+const VERSION='v0.21.3';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -336,15 +336,18 @@ function pickTheme(preview){if(preview)return THEMES[0];if(isStage())return them
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
 const mixHex=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(255*(v+(B[i]-v)*t)).toString(16).padStart(2,'0')).join('')};
 let faces=[],edges=[],facesT=[],edgesT=[],boxRecords=[],transBoxes=[],transNow=false;
+// 箱の6面：[頂点の番号, 明るさ, 外向きの向き]（向きは、半透明の箱で「カメラから見える面」を選ぶのに使う）
+const FACE_DEFS=[[[4,5,6,7],.88,[0,0,1]],[[1,0,3,2],.65,[0,0,-1]],[[0,4,7,3],.73,[-1,0,0]],[[5,1,2,6],.97,[1,0,0]],[[3,7,6,2],1.22,[0,1,0]],[[0,1,5,4],.50,[0,-1,0]]];
+let eyeNow=[0,10,10];
 function box(x,y,z,w,h,d,color,alpha=1,drawEdges=true){if(w<=.003||h<=.003||d<=.003)return;
  if(!gl){boxRecords.push({x,y,z,w,h,d,color,alpha,drawEdges});return}// R05：2Dの代わり描画では記録だけ（頂点は作らない）
  if(alpha<1&&!transNow){transBoxes.push([x,y,z,w,h,d,color,alpha,drawEdges]);return}// R06：半透明はあとで遠い順に描く
  const F=alpha<1?facesT:faces,E=alpha<1?edgesT:edges;
  const X0=x-w/2,X1=x+w/2,Y0=y-h/2,Y1=y+h/2,Z0=z-d/2,Z1=z+d/2;
  const p=[[X0,Y0,Z0],[X1,Y0,Z0],[X1,Y1,Z0],[X0,Y1,Z0],[X0,Y0,Z1],[X1,Y0,Z1],[X1,Y1,Z1],[X0,Y1,Z1]];
- const col=rgb(color),fdefs=[[[4,5,6,7],.88],[[1,0,3,2],.65],[[0,4,7,3],.73],[[5,1,2,6],.97],[[3,7,6,2],1.22],[[0,1,5,4],.50]];
- for(const [ind,shade] of fdefs){for(const i of [0,1,2,0,2,3]){F.push(...p[ind[i]],...col.map(c=>Math.min(1,c*shade)),alpha)}}
- if(drawEdges){const pairs=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(const [a,b]of pairs){const ec=theme.edge;E.push(...p[a],...ec,alpha*theme.edgeA,...p[b],...ec,alpha*theme.edgeA)}}
+ const col=rgb(color),fdefs=FACE_DEFS,see=alpha<1?FACE_DEFS.map(([,,n])=>n[0]*(eyeNow[0]-x)+n[1]*(eyeNow[1]-y)+n[2]*(eyeNow[2]-z)>(n[0]?w:n[1]?h:d)/2):null;
+ fdefs.forEach(([ind,shade],k)=>{if(see&&!see[k])return;for(const i of [0,1,2,0,2,3]){F.push(...p[ind[i]],...col.map(c=>Math.min(1,c*shade)),alpha)}});
+ if(drawEdges){const pairs=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(const [a,b]of pairs){if(see&&!fdefs.some(([ind],k)=>see[k]&&ind.includes(a)&&ind.includes(b)))continue;const ec=theme.edge;E.push(...p[a],...ec,alpha*theme.edgeA,...p[b],...ec,alpha*theme.edgeA)}}
 }
 // レビュー③：描画用の Float32Array は毎フレーム作らず使い回す（足りないときだけ1.5倍に広げる）
 let f32=new Float32Array(1<<16);
@@ -405,8 +408,8 @@ function reset(preview=false){state=preview?'ready':'playing';setFog(!preview);m
 // 霧の濃さ（ステージの fog：0〜3）。遊んでいる間だけ
 // 霧（ステージの fog：0〜3）。動くブロックは、タワーの真ん中から離れると霧に溶けて見えなくなる。
 // はっきり見えるのは真ん中から FOG_CLEAR の距離まで（うすい3.4／ふつう2.8／こい2.2。端までは6.6）。そこから1.6かけて薄くなり、
-// 端でも FOG_MIN の濃さでうっすら影が見える。画面の白い層は雰囲気だけ
-let fogLevel=0;const FOG_CLEAR=[99,3.4,2.8,2.2],FOG_MIN=[1,.3,.22,.15],FOG_COLOR='#eef0f6';
+// 端では完全に消える（FOG_MIN＝0）。画面の白い層は雰囲気だけ
+let fogLevel=0;const FOG_CLEAR=[99,3.4,2.8,2.2],FOG_MIN=[1,0,0,0],FOG_COLOR='#eef0f6';
 function setFog(on){fogLevel=on&&isStage()?(STAGES[stageIdx].fog||0):0;$('fog').style.opacity=[0,.45,.6,.75][fogLevel]}
 function fogVis(){if(!fogLevel||!moving)return 1;const d=Math.abs(moving[moving.axis]-stack[stack.length-1][moving.axis]);return Math.max(FOG_MIN[fogLevel],Math.min(1,1-(d-FOG_CLEAR[fogLevel])/1.6))}
 function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
@@ -598,7 +601,7 @@ function windows(b,eye){const a=Math.min(1,(clock-b.born)*2.5);if(a<=0)return;
   const fx_=b.x+s*(b.w/2+t/2);if(s*(eye[0]-fx_)>0)for(let i=0;i<nz;i++)box(fx_,b.y,b.z-b.d/2+b.d*(i+.5)/nz,t,wh,sz,col,a,false)}}
 function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;boxRecords.length=0;transBoxes.length=0;// R15：配列は作り直さず中身だけ空にする
  // A perspective camera circles the tower: geometry really has depth, not 2D isometric sprites.
- const eye=[Math.sin(camAz)*camDist,camY+camLift+Math.sin(clock*48)*camShake*.35,Math.cos(camAz)*camDist];// ロケットのときだけ少し揺れる
+ const eye=[Math.sin(camAz)*camDist,camY+camLift+Math.sin(clock*48)*camShake*.35,Math.cos(camAz)*camDist];eyeNow=eye;// ロケットのときだけ少し揺れる
  // Floating island & base pedestal, both genuine 3D cuboids.
  if(camY<8||viewing){box(0,-.55,0,8.6,.60,8.6,'#3c416e',1);box(0,-.20,0,8.15,.14,8.15,'#747fb5',1);box(0,-.11,0,5.75,.16,5.75,'#a5bce4',1)}
  for(const b of stack){if(b.appear&&clock<b.appear)continue;if(!viewing&&b.y<camY-16)continue;/* レビュー③：画面より下の階は描かない */box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}

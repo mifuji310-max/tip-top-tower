@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.20.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.20.1">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.20.1">
+<link rel="manifest" href="manifest.webmanifest?v=0.20.1">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -149,7 +149,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.20.0';
+const VERSION='v0.20.1';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -280,7 +280,8 @@ const STAGES=[
  {name:'マカオタワー',m:338,kinds:['gold','ice','grow','magnet','warp','ghost','thunder'],wind:true,first:'thunder',intro:'新登場：雷ブロック\n黄色い雷ブロックは要注意！\n外すと、ずれの2倍けずれる'},
  {name:'ザ・ストラット',m:350,kinds:['gold','ice','grow','magnet','warp','ghost','thunder','mini'],wind:true,first:'mini',intro:'第1章のしめくくり！新登場：ミニブロック\n幅が半分ぐらいで来る。まわりの白い枠を下の段に合わせてタップ。PERFECTなら太さがもどる'}];
 // 章：10ステージで1章。章ごとに色のテーマを決める（まとめ.md の章立て）
-const CHAPTER_THEMES=[['パステル']];
+// 第1章は単調にならないよう、ほかの章に割り当てていないテーマを順番に使う（ステージ1はパステル）。第10章は全部のテーマ（下の式でばらばらに）
+const CHAPTER_THEMES=[['パステル','木','方眼紙','レトロゲーム'],['和風','さくら'],['サイバー','ダーク'],['レンガ','雪景色'],['ガラス張り','ビビッド'],['砂漠','夕焼け'],['深海','宇宙'],['無機質','モノクロ'],['お菓子','ハロウィン']];
 const goalFloors=i=>Math.ceil(STAGES[i].m/FLOOR_M);
 // 1往復の長さ：端から反対の端へ行って戻るまで
 const TRIP=4*(MARGIN+1);
@@ -555,6 +556,7 @@ function windows(b,eye){const a=Math.min(1,(clock-b.born)*2.5);if(a<=0)return;
  for(const s of [1,-1]){
   const fz=b.z+s*(b.d/2+t/2);if(s*(eye[2]-fz)>0)for(let i=0;i<nx;i++)box(b.x-b.w/2+b.w*(i+.5)/nx,b.y,fz,sx,wh,t,col,a,false);
   const fx_=b.x+s*(b.w/2+t/2);if(s*(eye[0]-fx_)>0)for(let i=0;i<nz;i++)box(fx_,b.y,b.z-b.d/2+b.d*(i+.5)/nz,t,wh,sz,col,a,false)}}
+let fxTop=-1;
 function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;boxRecords.length=0;transBoxes.length=0;// R15：配列は作り直さず中身だけ空にする
  // A perspective camera circles the tower: geometry really has depth, not 2D isometric sprites.
  const eye=[Math.sin(camAz)*camDist,camY+camLift+Math.sin(clock*48)*camShake*.35,Math.cos(camAz)*camDist];// ロケットのときだけ少し揺れる
@@ -585,6 +587,8 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  for(const s of sparks){const z=s.size||.09;box(s.x,s.y,s.z,z,z,z,s.color,Math.min(1,s.life*1.8),false)}
  const rectAspect=cv.width/cv.height;
  const look=[0,camY,0];const vp=m4mul(perspective(48*Math.PI/180,rectAspect,.1,400),lookAt(eye,look));
+ // PERFECTなどの文字：いちばん上の段より3〜4段下（タワーの胴体）に出す。動くブロックと重ならないように（画面の40〜76%の間）
+ {const tp=stack[stack.length-1],py=tp.y-H*3.5,cw=vp[3]*tp.x+vp[7]*py+vp[11]*tp.z+vp[15],cy=(vp[1]*tp.x+vp[5]*py+vp[9]*tp.z+vp[13])/cw,ft=Math.round(Math.max(40,Math.min(76,(1-cy)/2*100)));if(ft!==fxTop){fxTop=ft;el.effect.style.top=ft+'%'}}
  if(!gl){drawFallback(vp,eye);return;}if(glLost)return;
  // R06：半透明の箱を、カメラから遠い順に頂点にする
  transBoxes.sort((a,b)=>((b[0]-eye[0])**2+(b[1]-eye[1])**2+(b[2]-eye[2])**2)-((a[0]-eye[0])**2+(a[1]-eye[1])**2+(a[2]-eye[2])**2));

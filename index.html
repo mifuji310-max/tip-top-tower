@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#141932">
+<title>Tip Top Tower</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.14.1">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.14.1">
+<link rel="manifest" href="manifest.webmanifest?v=0.14.1">
+<meta name="apple-mobile-web-app-title" content="Tip Top Tower">
+<meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
+<style>
+:root{color-scheme:dark;--ink:#f8faff;--soft:#b8c4e7;--edge:#59678e}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#12162b;color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(ellipse at 50% -15%,#354477 0%,#181e3f 44%,#11152b 100%)}
+.wrap{max-width:460px;margin:auto;padding:14px 14px max(20px,env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.eyebrow{font-size:10px;letter-spacing:.22em;color:#a6cff9;font-weight:900;margin-bottom:3px}
+h1{font-size:clamp(23px,6.4vw,31px);font-weight:1000;letter-spacing:.01em;margin:0;line-height:1.1}
+h1 em{font-style:normal;color:#ffe9aa}.chip3d{display:inline-block;vertical-align:middle;margin-left:8px;transform:translateY(-2px);border:1px solid #9ce9eb73;background:#20aeb12b;color:#99f6ee;border-radius:8px;padding:4px 6px;font-size:12px;letter-spacing:.04em}
+.best{text-align:center;min-width:104px;border:1px solid #6a79a1;border-radius:15px;padding:7px 12px;background:#222b4ed6;box-shadow:0 7px 15px #05091838}
+.best small{display:block;font-size:10px;letter-spacing:.12em;color:#acc0e1;font-weight:800}
+.best strong{font-size:22px;font-weight:1000;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:11px}
+.stat{background:#2833529e;border:1px solid #536181;border-radius:13px;text-align:center;padding:8px 4px 7px}
+.stat small{display:block;color:#becae2;font-size:10px;font-weight:800;margin-bottom:1px}
+.stat strong{display:block;font-size:23px;line-height:1.12;font-variant-numeric:tabular-nums;font-weight:1000}
+.stat:nth-child(3) strong{color:#ffe49e}.stat:nth-child(4) strong{color:#9fe9e7}.stat.bonus-flash{animation:timeFlash .65s ease-out}@keyframes timeFlash{30%{background:#2c816b;border-color:#b0ffca;box-shadow:0 0 22px #69ffae66}100%{background:#2833529e}}
+.stage{position:relative;overflow:hidden;border-radius:22px;isolation:isolate;border:2px solid #8897ce;box-shadow:0 18px 45px #04081d82,inset 0 0 28px #9ec6ff2a;touch-action:manipulation;user-select:none;-webkit-user-select:none;background:radial-gradient(ellipse 65% 30% at 52% 30%,#7086cd56,transparent 75%),linear-gradient(165deg,#334985 0%,#3e448a 43%,#7775ad 78%,#b7aac5 100%)}
+.stage:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:var(--stars,.42);background-image:radial-gradient(circle at 11% 15%,#fff 0 1px,transparent 2px),radial-gradient(circle at 78% 13%,#fff 0 1.4px,transparent 2.2px),radial-gradient(circle at 45% 24%,#fff 0 1px,transparent 2px),radial-gradient(circle at 88% 37%,#fff 0 1px,transparent 2px),radial-gradient(circle at 20% 42%,#fff 0 1px,transparent 2px),radial-gradient(circle at 68% 57%,#fff 0 1px,transparent 2px);background-size:233px 263px}
+canvas{display:block;width:100%;aspect-ratio:360 / 500;position:relative;z-index:1;touch-action:manipulation;cursor:pointer;outline:none}
+.stage-top{position:absolute;z-index:2;top:13px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none;gap:8px}
+.pill{background:#17264cb5;border:1px solid #c7e7ff72;color:#e8f5ff;padding:6px 10px;border-radius:99px;letter-spacing:.04em;font-weight:900;font-size:10px;box-shadow:0 3px 12px #13214b36}
+.bar{position:absolute;z-index:3;top:0;left:0;right:0;height:4px;background:#fff3}.bar>div{height:100%;background:linear-gradient(90deg,#66e8dc,#d4fdab,#ffcd88);width:100%}
+.bottom-hint{position:absolute;z-index:2;bottom:16px;left:0;right:0;text-align:center;color:#eef9ff;pointer-events:none;text-shadow:0 2px 8px #19254e;font-size:13px;letter-spacing:.15em;font-weight:900}
+.effect{position:absolute;z-index:3;top:31%;left:0;right:0;text-align:center;font-size:28px;line-height:1.2;font-weight:1000;color:#fff0a6;text-shadow:0 3px 0 #9f6c63,0 8px 22px #23274f;letter-spacing:.04em;pointer-events:none;opacity:0;transform:translateY(15px) scale(.9)}
+.effect small{display:block;margin-top:7px;font-size:15px;color:#b7ffe1;text-shadow:0 2px 8px #123453;letter-spacing:.02em}.effect.show{animation:floatUp .86s ease-out both}@keyframes floatUp{0%{opacity:0;transform:translateY(16px) scale(.8)}20%{opacity:1;transform:translateY(0) scale(1.08)}75%{opacity:1;transform:translateY(-10px) scale(1)}100%{opacity:0;transform:translateY(-35px) scale(1)}}
+.overlay{position:absolute;z-index:5;inset:0;display:flex;align-items:center;justify-content:center;padding:14px;background:linear-gradient(180deg,#18234283,#171b42af)}.overlay[hidden]{display:none}
+.panel{text-align:center;width:100%;max-width:330px;border-radius:24px;border:1px solid #ceeaff77;background:linear-gradient(160deg,#24345cec,#1c2747ee);padding:24px 19px;box-shadow:0 22px 45px #0a1238a0}
+.badge{display:inline-block;background:#fff0aa;color:#685126;padding:5px 12px;border-radius:99px;font-size:11px;letter-spacing:.1em;font-weight:1000;margin-bottom:10px}
+.panel h2{margin:1px 0 10px;font-size:27px;line-height:1.27;font-weight:1000}
+.panel p{font-size:13px;line-height:1.9;color:#dce6fa;margin:0 0 18px}.panel b{color:#ffe6a4}
+button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
+.primary{color:#312b3e;background:linear-gradient(130deg,#ffe5a4,#ffb69c);font-size:17px;letter-spacing:.02em;font-weight:1000;border-radius:14px;width:100%;padding:15px 10px;box-shadow:0 5px 0 #ac6977}.primary:active{transform:translateY(3px);box-shadow:0 2px 0 #ac6977}
+.result{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:13px 0 20px}.result>div{padding:9px 4px;border-radius:12px;background:#101f3f;border:1px solid #536c97}.result small{display:block;font-size:10px;color:#b6c7e4}.result strong{display:block;font-size:21px;white-space:nowrap}
+#endText{white-space:pre-line;line-height:1.75}
+.sub{margin-top:12px;width:100%;padding:11px 8px;border-radius:12px;border:1px solid #8fa6d8;background:#2b3d68;color:#eaf3ff;font-size:14px;font-weight:900}.sub:active{background:#41567c}
+.panel{max-height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding-right:22px!important}.panel::-webkit-scrollbar{display:none}.subrow{display:flex;gap:7px}.subrow .sub{flex:1;min-width:0}
+.bgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0 4px}.bitem{background:#101f3f;border:1px solid #536c97;border-radius:10px;padding:7px 3px;font-size:10px;line-height:1.3;color:#dce6fa}.bitem i{display:block;font-style:normal;font-size:24px;line-height:1.2}.bitem.locked{opacity:.45}.bitem.locked i{filter:grayscale(1)}.bitem.new{border-color:#ffe08a;box-shadow:0 0 12px #ffe08a99}
+.primary small{display:block;font-size:11px;font-weight:800;opacity:.75;margin-top:2px;letter-spacing:0}
+/* ===== ブロック風UI（ロゴと同じ：前の面＋上の面（明るい）＋右の面（暗い）、細い白線、角は四角） ===== */
+.panel{border-radius:3px;border:1.5px solid #ffffff4d;background:#1c2747f5;padding:20px 16px 18px;
+ box-shadow:1px -1px 0 #34477c,2px -2px 0 #34477c,3px -3px 0 #34477c,4px -4px 0 #2c3d6c,5px -5px 0 #2c3d6c,6px -6px 0 #2c3d6c,7px -7px 0 #253460,0 18px 40px #05091890;margin:8px 8px 0 0}
+.panel h2{font-size:22px;margin:6px 0 8px}
+.btitle{display:block;height:30px;width:auto;max-width:100%;margin:2px auto 6px;overflow:visible}
+.psub{font-size:12px!important;color:#b9c7e6!important;margin:0 0 14px!important;letter-spacing:.04em}
+.primary,.sub,.sitem,.controls button{position:relative;border-radius:0;border:1.5px solid #ffffff8c;--d:6px;--top:#fff;--side:#999;margin-right:var(--d);transition:transform .07s}
+.primary::before,.sub::before,.sitem::before,.controls button::before{content:"";position:absolute;left:-1.5px;right:-1.5px;bottom:calc(100% + 1.5px);height:var(--d);background:var(--top);transform:skewX(-45deg);transform-origin:0 100%;border:1px solid #ffffff59;border-bottom:0;pointer-events:none}
+.primary::after,.sub::after,.sitem::after,.controls button::after{content:"";position:absolute;top:-1.5px;bottom:-1.5px;left:calc(100% + 1.5px);width:var(--d);background:var(--side);transform:skewY(-45deg);transform-origin:0 0;border:1px solid #ffffff40;border-left:0;pointer-events:none}
+.primary:active,.sub:active,.sitem:active:not(:disabled),.controls button:active{transform:translate(4px,-4px);--d:2px}
+.primary{--face:#ffb2a8;background:var(--face);--top:#ffd9d3;--side:#c98179;color:#2a1f33;box-shadow:none;margin-top:calc(var(--d) + 8px);border-radius:0}
+.primary:active{box-shadow:none}
+.primary.alt{--face:#7cddf1;background:var(--face);--top:#c4f2fb;--side:#4a9fb3;box-shadow:none}
+.primary.alt:active{box-shadow:none}
+#startBtn{--face:#ffb2a8}
+#nextBtn{--face:#84e3c9;background:var(--face);--top:#c9f5e9;--side:#4f9e88}
+.sub{background:#2b3d68;--top:#41598f;--side:#18223f;margin-top:calc(var(--d) + 8px);color:#eef4ff}
+.controls button{background:#263455;--d:5px;--top:#3a4e80;--side:#141c36;margin-top:6px}
+.result>div{border-radius:0;border:1.5px solid #ffffff40;background:#101b38;box-shadow:1px -1px 0 #2a3a66,2px -2px 0 #2a3a66,3px -3px 0 #22305a}
+.bitem{border-radius:0!important}
+.stars-big{font-size:28px;line-height:1.1;color:#ffd34d;text-shadow:2px -2px 0 #b8892a;letter-spacing:6px;margin:0 0 4px}
+#endPanel h2{font-size:20px;margin:2px 0 6px}#endPanel .result{margin:8px 0 6px}#endText{font-size:12.5px;margin-bottom:4px}
+/* ブロック文字のラベル */
+.bt{display:block;height:15px;width:auto;max-width:100%;margin:0 auto;overflow:visible;pointer-events:none}
+.primary .bt{height:21px}.sub .bt{height:14px}.controls .bt{height:11px}.bt.flat{height:8px}
+.stat small .bt.flat,.result small .bt.flat,.best small .bt.flat{height:7px;margin:2px auto 4px}
+.effect .bt{width:88%;height:auto;max-height:30px;filter:drop-shadow(0 3px 0 #1c2747) drop-shadow(0 6px 14px #10183a)}.bottom-hint .bt{height:11px;opacity:.9}
+.primary small{margin-top:5px}
+/* ステージ選択：ステージを「タワー」として下から積み上げる */
+#stagePanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}#stagePanel .stower{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}#stagePanel .stower::-webkit-scrollbar{display:none}
+.phead{display:flex;align-items:center;gap:12px;margin-bottom:4px;flex:none}.phead .btitle{margin:0;height:26px}.sub.mini{width:auto;flex:none;margin:6px 0 0;padding:4px 12px;font-size:16px;--d:4px}
+.stower{display:flex;flex-direction:column-reverse;gap:11px;margin:6px 0 2px;padding:6px 8px 0 0}
+.sitem{display:flex;align-items:center;gap:10px;width:90%;text-align:left;padding:5px 10px;background:var(--face);color:#22203a;font-size:14px;font-weight:1000;--d:7px;animation:slabDrop .5s cubic-bezier(.3,1.4,.55,1) backwards}
+.sitem small{display:block;font-size:10px;font-weight:800;opacity:.75}
+.sitem .num{height:20px;width:auto;flex:none;overflow:visible}
+.sitem .stars{margin-left:auto;font-size:13px;color:#7a5200;letter-spacing:1px;white-space:nowrap}
+.sitem:disabled{--face:#3a4466!important;--top:#4c5880!important;--side:#252c47!important;color:#aab4d4;cursor:default}
+.sitem.ghost{--face:transparent!important;--top:transparent!important;--side:transparent!important;border-style:dashed;color:#9fb0d8;animation:none;opacity:.8}
+@keyframes slabDrop{0%{transform:translateY(-90px);opacity:0}50%{opacity:1}100%{transform:none}}
+/* ===== タイトルロゴ（ブロック文字） ===== */
+#startPanel{background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;max-width:380px;padding:0 10px 6px 0!important}
+#startPanel .primary{padding:11px 10px}#startPanel .tagline{margin-bottom:8px}
+.stage.title .stage-top,.stage.title .bottom-hint,.stage.title .bar{opacity:0;transition:opacity .3s}
+#startPanel .tagline{font-size:13px;font-weight:800;letter-spacing:.12em;color:#e4ecff;margin:0 0 16px;text-shadow:0 2px 10px #0b1030}
+.logo{display:block;width:100%;height:auto;overflow:visible;margin:0 auto 4px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.logo .lt{transform-box:fill-box;transform-origin:50% 100%;transition:transform .18s ease-out}
+.logo .lt.drop{animation:ltDrop .75s cubic-bezier(.25,1.5,.5,1) backwards}
+@keyframes ltDrop{0%{transform:translateY(-170px);opacity:0}40%{opacity:1}100%{transform:none;opacity:1}}
+.logo .lt.pop{animation:ltPop .5s cubic-bezier(.2,.8,.3,1)}
+@keyframes ltPop{0%{transform:translateY(-6px) scale(1.04,.96)}14%{transform:translateY(-20px) scale(1.07,.93)}45%{transform:translateY(2px) scale(.94,1.07)}70%{transform:translateY(-4px) scale(1.02,.98)}100%{transform:none}}
+@media(hover:hover){.logo .lt:hover{transform:translateY(-4px)}}
+.logo .sp{transform-box:fill-box;transform-origin:center;animation:spark .75s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes spark{0%{transform:translate(0,0) rotate(0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(.2);opacity:0}}
+.logo .star{animation:twinkle 2.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.2}50%{opacity:1}}
+.logo .cloud{animation:drift 8s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translateX(12px)}}
+@media(prefers-reduced-motion:reduce){.logo .lt.drop,.logo .star,.logo .cloud{animation:none}}
+#introText{white-space:pre-line;font-size:13px;line-height:1.7;margin-bottom:8px}.stars-big{font-size:30px;color:#ffd34d;letter-spacing:4px;margin:-4px 0 6px}
+.stat.hurry{background:#7a2c4a;border-color:#ff9db0}.stat.hurry strong{color:#ffd0d8;animation:hurry .45s ease-in-out infinite alternate}@keyframes hurry{to{transform:scale(1.18)}}
+.controls{display:flex;gap:7px;margin-top:11px}.controls button{flex:1;border:1px solid #536789;border-radius:12px;padding:11px 5px;background:#263455;color:#eaf3ff;font-size:12px;font-weight:850;min-width:0}.controls button:active{background:#41567c}
+.tip{text-align:center;margin:11px 2px 0;font-size:12px;line-height:1.6;color:#d5dff0}.fine{text-align:center;margin:6px 2px 0;font-size:10px;color:#a2b3d2}
+button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offset:2px}
+@media(max-height:750px){.wrap{padding-top:8px}header{margin-bottom:8px}.stats{margin-bottom:7px}.stat{padding-top:5px;padding-bottom:5px}.stat strong{font-size:20px}.controls{margin-top:8px}.tip{margin-top:7px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header><div><div class="eyebrow">MINI GAME 01 · <span id="ver"></span></div><h1>Tip Top <em>Tower</em></h1></div><div class="best"><small id="lblBest">BEST SCORE</small><strong id="best">0</strong></div></header>
+  <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
+  <section class="stage" id="stage" aria-label="3Dブロック積みゲーム">
+    <canvas id="game" width="720" height="1000" aria-label="画面タップで移動中の3Dブロックを落とす" tabindex="0"></canvas>
+    <div class="bar"><div id="timebar"></div></div>
+    <div class="stage-top"><span class="pill" id="goal">1段＝10m</span><span class="pill" id="level">LEVEL 1</span></div>
+    <div class="effect" id="effect" aria-live="polite"><span id="effect-title"></span><small id="effect-detail"></small></div>
+    <div class="bottom-hint" id="bottomHint">TAP TO STACK</div>
+    <div class="overlay" id="overlay">
+      <div class="panel" id="startPanel"><svg class="logo" id="logo" role="img" aria-label="Tip Top Tower"></svg><p class="tagline">ブロックを積んで、空のてっぺんへ。</p><button class="primary" id="startBtn" aria-label="エンドレス"></button><button class="primary alt" id="stageBtn" aria-label="ステージ"></button><button class="sub" id="badgeBtnStart" aria-label="バッジ"></button></div>
+      <div class="panel" id="stagePanel" hidden><div class="phead"><button class="sub mini" id="stageBack" aria-label="もどる">←</button><svg class="btitle" id="stageTitle" role="img" aria-label="STAGE"></svg></div><p class="psub">下から順にクリアしよう</p><div class="stower" id="stageList"></div></div>
+      <div class="panel" id="introPanel" hidden><svg class="btitle" id="introBadge" role="img"></svg><h2 id="introTitle"></h2><p id="introText"></p><p class="psub" id="introStars"></p><button class="primary" id="introStart" aria-label="スタート"></button><button class="sub" id="introBack" aria-label="もどる"></button></div>
+      <div class="panel" id="endPanel" hidden><svg class="btitle" id="endBadge" role="img"></svg><h2 id="endTitle">ゲーム終了</h2><div class="stars-big" id="endStars" hidden></div><p id="endText">もう一度挑戦してみよう</p><div class="result"><div><small id="lblFScore">SCORE</small><strong id="finalScore">0</strong></div><div><small id="lblFHeight">高さ</small><strong id="finalHeight">0</strong></div><div><small id="lblFPeople">住人</small><strong id="finalResidents">0</strong></div></div><button class="primary" id="nextBtn" hidden aria-label="次のステージ"></button><button class="primary" id="againBtn" aria-label="もう一度"></button><div class="subrow"><button class="sub" id="viewBtn" aria-label="タワーを見る"></button><button class="sub" id="badgeBtnEnd" aria-label="バッジ"></button></div><button class="sub" id="menuBtn" aria-label="メニューへ"></button></div>
+      <div class="panel" id="badgePanel" hidden><svg class="btitle" id="badgeTitle" role="img" aria-label="BADGES"></svg><p class="psub" id="badgeCount"></p><div class="bgrid" id="badgeGrid"></div><button class="sub" id="badgeBack" aria-label="もどる"></button></div>
+    </div>
+  </section>
+  <div class="controls"><button id="restart" aria-label="はじめから"></button><button id="rotate" aria-label="視点変更"></button><button id="sound" aria-label="音のオンオフ" aria-pressed="true"></button></div>
+  <p class="tip" id="tip">PERFECTで時間回復。連続PERFECTで音がドレミと上がるよ！</p>
+  <p class="fine">3D立体表示・オフライン対応・最高記録は端末内に保存</p>
+</main>
+<script>
+(()=>{'use strict';
+const VERSION='v0.14.1';
+const $=id=>document.getElementById(id);const cv=$('game');$('ver').textContent=VERSION;
+const gl=cv.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:false})||cv.getContext('experimental-webgl',{antialias:true,alpha:true});
+const fallbackCtx=gl?null:cv.getContext('2d');
+const shader=(type,source)=>{const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s};
+const vs=gl?shader(gl.VERTEX_SHADER,'attribute vec3 aPosition; attribute vec4 aColor; uniform mat4 uViewProjection; varying vec4 vColor; void main(){gl_Position=uViewProjection*vec4(aPosition,1.0);vColor=aColor;}'):null;
+const fs=gl?shader(gl.FRAGMENT_SHADER,'precision mediump float; varying vec4 vColor; void main(){gl_FragColor=vColor;}'):null;
+const program=gl?gl.createProgram():null;if(gl){gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));gl.useProgram(program)}
+const aPosition=gl?gl.getAttribLocation(program,'aPosition'):-1,aColor=gl?gl.getAttribLocation(program,'aColor'):-1,uVP=gl?gl.getUniformLocation(program,'uViewProjection'):null;
+const faceBuffer=gl?gl.createBuffer():null,lineBuffer=gl?gl.createBuffer():null;if(gl){gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0)}
+const m4mul=(a,b)=>{const o=new Float32Array(16);for(let i=0;i<4;i++)for(let j=0;j<4;j++)for(let k=0;k<4;k++)o[i+j*4]+=a[i+k*4]*b[k+j*4];return o};
+const perspective=(fov,aspect,n,f)=>{const m=new Float32Array(16),q=1/Math.tan(fov/2);m[0]=q/aspect;m[5]=q;m[10]=(f+n)/(n-f);m[11]=-1;m[14]=(2*f*n)/(n-f);return m};
+function lookAt(e,t){const norm=v=>{const l=Math.hypot(...v)||1;return v.map(x=>x/l)};const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];const z=norm(e.map((x,i)=>x-t[i])),x=norm(cross([0,1,0],z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-x.reduce((s,v,i)=>s+v*e[i],0),-y.reduce((s,v,i)=>s+v*e[i],0),-z.reduce((s,v,i)=>s+v*e[i],0),1])}
+function fit(){const rect=cv.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);cv.width=Math.max(1,Math.floor(rect.width*dpr));cv.height=Math.max(1,Math.floor(rect.height*dpr));if(gl)gl.viewport(0,0,cv.width,cv.height)}
+window.addEventListener('resize',()=>{fit();if(typeof menuShownAt!=='undefined')menuShownAt=performance.now()},{passive:true});fit();
+const H=.68,MAX_TIME=60,TIME_CAP=80,RUN_CAP=180,BASE=4.6,MARGIN=5.6;
+const HURRY=10,FLOOR_M=10,CAM_DIST=17.8,CAM_LIFT=11.8,ANGLES=[.55,1.55,2.55,-.55],MAX_CHARMS=3;
+// 1段＝10mとして比べる実在の建物（高さm, 名前）
+const LANDMARKS=[[15,'奈良の大仏'],[93,'自由の女神'],[120,'牛久大仏'],[243,'東京都庁'],[300,'あべのハルカス'],[333,'東京タワー'],[634,'東京スカイツリー'],[828,'ブルジュ・ハリファ'],[3776,'富士山']];
+// 連続PERFECTで鳴らすドレミファソラシド
+const SCALE=[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5];
+// 特殊ブロック：色（alt と交互に光る）・まわりに出る粒の色
+const KINDS={
+ gold:{color:'#ffcc33',alt:'#fff6c2',spark:'#fff3a0'},
+ ice:{color:'#e6f9ff',alt:'#7fd4ff',spark:'#ffffff'},
+ grow:{color:'#6dff8e',alt:'#d2ffdc',spark:'#b9ffc9'}};
+const CHARM_EVERY=4,WIND_EVERY=10;
+const KIND_MARKS={gold:['00100','01110','11111','01110','01010'],ice:['10101','01110','11011','01110','10101'],grow:['00100','00100','11111','00100','00100']};
+// 高さで変わる空（m, 上→下の4色, 星の濃さ）：夕方→雲の上の青空→夕暮れ→夜→宇宙
+const SKY=[[0,['#334985','#3e448a','#7775ad','#b7aac5'],.42],[150,['#2f6fc4','#4f95dc','#8fc6ef','#dff1ff'],0],[330,['#2a3778','#4b4d98','#9a74a8','#f0a98a'],.15],[600,['#0d1438','#17204f','#26306a','#3d3f78'],.7],[850,['#020309','#060820','#0c1030','#171a45'],1]];
+// 100〜300m付近に浮かぶ雲（位置は毎回同じ）
+const CLOUDS=Array.from({length:16},(_,i)=>({y:(9+i*1.4)*H,a:i*2.39,r:7+(i*37%5),s:.8+(i*13%4)*.2}));
+// バッジ（id, アイコン, 名前, 取り方）
+const BADGES=[['h10','🏠','はじめの一歩','100mまで積む'],['tokyo','🗼','東京タワー超え','333mを超える'],['sky','🌆','スカイツリー超え','634mを超える'],['burj','🏙','世界一のビル超え','828mを超える'],
+ ['c5','✨','5連続PERFECT','PERFECTを5回続ける'],['c10','🌟','10連続PERFECT','PERFECTを10回続ける'],['c20','👑','20連続PERFECT','PERFECTを20回続ける'],
+ ['gold','🥇','金ピカ','金ブロックをPERFECT'],['ice','🧊','氷の達人','氷ブロックをPERFECT'],['grow','🌱','ふくらまし名人','緑ブロックをPERFECT'],['wind','🌬','風に負けない','風の段をPERFECT'],
+ ['charm','🧿','お守りに感謝','お守りでセーフ'],['hurry','⏰','ギリギリ名人','残り10秒未満でPERFECT'],['r300','🏘','にぎやかタワー','住人300人'],['full','🏁','あそびきり','3分間ミスせず遊ぶ'],
+ ['star3','⭐','パーフェクトクリア','ステージを★3でクリア'],['allclear','🎖','ステージ制覇','全ステージをクリア']];
+// ステージモード：ゴールは実在の建物。1ステージに1つずつ新しい仕掛けが登場する
+const STAGES=[
+ {name:'自由の女神',m:93,kinds:[],wind:false,intro:'まずは練習！\nブロックは1往復するまでに置こう。\n赤く光ったら急いで！'},
+ {name:'牛久大仏',m:120,kinds:['gold'],wind:false,first:'gold',intro:'新登場：金ブロック\n金色に光るブロックをPERFECTで置くと得点3倍！'},
+ {name:'東京都庁',m:243,kinds:['gold','ice'],wind:false,first:'ice',intro:'新登場：氷ブロック\n水色の氷ブロックは速いけど得点2倍'},
+ {name:'あべのハルカス',m:300,kinds:['gold','ice','grow'],wind:false,first:'grow',intro:'新登場：ふくらむブロック\n緑のブロックをPERFECTで置くと太くなる'},
+ {name:'東京タワー',m:333,kinds:['gold','ice','grow'],wind:true,intro:'新登場：風\n10段ごとに風がふく。\n白い線と同じ向きに動くと速く、逆だと遅い'}];
+const goalFloors=i=>Math.ceil(STAGES[i].m/FLOOR_M);
+// 1往復の長さ：端から反対の端へ行って戻るまで
+const TRIP=4*(MARGIN+1);
+const windowsFor=w=>Math.max(1,Math.min(5,Math.floor(w/.9)));
+const residentsOf=b=>windowsFor(b.w)+windowsFor(b.d);
+// 普通のブロックの色。特殊ブロック（金＝黄・氷＝水色・緑）と見分けやすいよう、似た色は使わない
+const colors=['#ffb2a8','#c8a4ff','#f4a0dc','#98bbff'];
+// ブロックのテーマ：blocks＝普通のブロックの色、win/winP＝窓の明かり（通常/PERFECTの階）、edge/edgeA＝ふちの線の色と濃さ
+const THEMES=[
+ {name:'パステル',blocks:colors,win:'#fff3c4',winP:'#ffd36e',edge:[.94,.97,1],edgeA:.32},
+ {name:'ダーク',blocks:['#2c3150','#3b2f55','#23394d','#463352'],win:'#7ff6ff',winP:'#ff7ae0',edge:[.55,.62,1],edgeA:.45},
+ {name:'ビビッド',blocks:['#ff4d6d','#ff8a1f','#8b5cf6','#3b6cf6'],win:'#ffffff',winP:'#fff36b',edge:[1,1,1],edgeA:.4},
+ {name:'無機質',blocks:['#9aa3ad','#7f8893','#b5bcc4','#6b7380'],win:'#cfe8ff',winP:'#ffffff',edge:[.85,.88,.92],edgeA:.35},
+ {name:'モノクロ',blocks:['#f2f2f2','#2a2a2a','#d6d6d6','#444444'],win:'#9a9a9a',winP:'#ffffff',edge:[.6,.6,.6],edgeA:.5}];
+let theme=THEMES[0];
+// ステージ：ステージごとに決まったテーマ（ステージ1＝練習はパステル）。エンドレス：遊ぶたびにランダム
+function pickTheme(preview){if(preview)return THEMES[0];if(isStage())return stageIdx===0?THEMES[0]:THEMES[1+((stageIdx*3+1)%(THEMES.length-1))];return THEMES[Math.floor(Math.random()*THEMES.length)]}
+const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);
+const mixHex=(a,b,t)=>{const A=rgb(a),B=rgb(b);return '#'+A.map((v,i)=>Math.round(255*(v+(B[i]-v)*t)).toString(16).padStart(2,'0')).join('')};
+let faces=[],edges=[],boxRecords=[];
+function box(x,y,z,w,h,d,color,alpha=1,drawEdges=true){if(w<=.003||h<=.003||d<=.003)return;boxRecords.push({x,y,z,w,h,d,color,alpha,drawEdges});
+ const X0=x-w/2,X1=x+w/2,Y0=y-h/2,Y1=y+h/2,Z0=z-d/2,Z1=z+d/2;
+ const p=[[X0,Y0,Z0],[X1,Y0,Z0],[X1,Y1,Z0],[X0,Y1,Z0],[X0,Y0,Z1],[X1,Y0,Z1],[X1,Y1,Z1],[X0,Y1,Z1]];
+ const col=rgb(color),fdefs=[[[4,5,6,7],.88],[[1,0,3,2],.65],[[0,4,7,3],.73],[[5,1,2,6],.97],[[3,7,6,2],1.22],[[0,1,5,4],.50]];
+ for(const [ind,shade] of fdefs){for(const i of [0,1,2,0,2,3]){faces.push(...p[ind[i]],...col.map(c=>Math.min(1,c*shade)),alpha)}}
+ if(drawEdges){const pairs=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];for(const [a,b]of pairs){const ec=theme.edge;edges.push(...p[a],...ec,alpha*theme.edgeA,...p[b],...ec,alpha*theme.edgeA)}}
+}
+function drawBuffer(buffer,items,mode){if(!items.length)return;gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(items),gl.DYNAMIC_DRAW);gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,28,0);gl.vertexAttribPointer(aColor,4,gl.FLOAT,false,28,12);gl.enableVertexAttribArray(aPosition);gl.enableVertexAttribArray(aColor);gl.drawArrays(mode,0,items.length/7)}
+const read=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v}catch{return d}};const write=(k,v)=>{try{localStorage.setItem(k,String(v))}catch{}};
+let best=Math.max(0,Number(read('pittariTower3D.best',read('pittariTower3D.v03.best',0)))||0),bestHeight=Math.max(0,Number(read('pittariTower3D.bestHeight',0))||0);
+let soundOn=read('pittariTower3D.sound','on')==='on',audio=null;
+let badges=new Set(),newBadges=[];try{badges=new Set(JSON.parse(read('pittariTower3D.badges','[]')))}catch{}
+// バッジはプレイ中は知らせず、結果画面でまとめて見せる（プレイ中は画面を見る余裕がないため）
+function award(id){if(badges.has(id))return;badges.add(id);newBadges.push(id);write('pittariTower3D.badges',JSON.stringify([...badges]))}
+// ステージごとの最高★（0＝未クリア）。前のステージを★1以上でクリアすると次が遊べる
+let stageStars=STAGES.map(()=>0);try{const s=JSON.parse(read('pittariTower3D.stageStars','[]'));stageStars=STAGES.map((_,i)=>Number(s[i])||0)}catch{}
+let mode='endless',stageIdx=0,endReason='miss';
+const isStage=()=>mode==='stage';
+const unlocked=i=>i===0||stageStars[i-1]>0;
+let state='ready',stack=[],moving=null,falling=[],sparks=[],score=0,combo=0,maxCombo=0,perfects=0,bonusSeconds=0,residents=0,elapsed=0,totalPlayed=0,endsIn=0,last=0,clock=0,camY=1.8,camTarget=1.8,camAz=0.55,camAzTarget=0.55,angleChoice=0,
+ viewing=false,camDist=CAM_DIST,camDistT=CAM_DIST,camLift=CAM_LIFT,camLiftT=CAM_LIFT,charms=0,sparkTimer=0,winds=[],windTimer=0,skyM=0,skyShown=-1;
+const el={height:$('height'),score:$('score'),combo:$('combo'),time:$('time'),best:$('best'),level:$('level'),bar:$('timebar'),overlay:$('overlay'),start:$('startPanel'),end:$('endPanel'),effect:$('effect'),tip:$('tip'),sound:$('sound'),hint:$('bottomHint'),goal:$('goal'),stage:$('stage'),stagePanel:$('stagePanel'),intro:$('introPanel'),badgePanel:$('badgePanel')};
+const remaining=()=>Math.max(0,Math.min(MAX_TIME-elapsed,RUN_CAP-totalPlayed));
+const isHurry=()=>!isStage()&&state==='playing'&&remaining()<HURRY;
+// オーバーレイに出すパネルを1つだけにする（null なら全部隠す）
+let menuShownAt=0;
+function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel])q.hidden=q!==p;el.overlay.hidden=!p}
+const meters=()=>(stack.length-1)*FLOOR_M;
+function updateHud(){const next=LANDMARKS.find(([m])=>m>(state==='ready'?0:meters())),st=STAGES[stageIdx],stg=isStage()&&state!=='ready';
+ el.goal.textContent=state==='ready'?'1段＝10m':state==='over'?meters()+'m ／ 住人'+residents+'人':stg?meters()+'m ／ ゴール：'+st.name+' '+st.m+'m':meters()+'m ／ '+(next?'次：'+next[1]+' '+next[0]+'m':'てっぺん！');
+ el.time.parentElement.classList.toggle('hurry',isHurry());
+ // ステージ：時間の代わりに「ゴールまでのこり段」、上のバーは1往復の残り
+ setText($('timeLabel'),stg?'LEFT':'TIME',['#becae2'],{flat:1});el.time.textContent=stg?Math.max(0,goalFloors(stageIdx)-(stack.length-1)):Math.ceil(remaining());
+ el.bar.style.width=(stg?(moving?100*Math.max(0,1-moving.trip/TRIP):0):Math.min(100,100*remaining()/MAX_TIME))+'%';
+el.height.textContent=state==='ready'?0:stack.length-1;el.score.textContent=score;el.combo.textContent=combo;el.best.textContent=best;el.level.textContent=(stg?'STAGE '+(stageIdx+1):'LV '+(state==='ready'?1:stack.length))+(charms?' ・ お守り'+charms:'')}
+function newMoving(){const prev=stack[stack.length-1],level=stack.length,axis=level%2?'x':'z',positive=(level%4===2||level%4===3),side=positive?1:-1;
+ moving={x:prev.x,z:prev.z,w:prev.w,d:prev.d,y:(level+.5)*H,color:theme.blocks[level%theme.blocks.length],axis,dir:-side,speed:Math.min(4.1+(level-1)*.28,8.7)};moving[axis]=side*(MARGIN+1.0);
+ // 特殊ブロック（3段目から）：金＝PERFECTで3倍／氷＝速いけど2倍／緑＝PERFECTでふくらむ（細くなった時だけ）
+ const r=Math.random(),thin=prev.w*prev.d<BASE*BASE*.64;
+ moving.kind=level<3?'':r<.10?'gold':r<.18?'ice':(thin&&r<.30)?'grow':'';moving.trip=0;
+ // ステージ：そのステージで出せる仕掛けだけ。新登場の仕掛けは3段目で必ず1回見せる
+ const st=STAGES[stageIdx];
+ if(isStage()&&state==='playing'){if(!st.kinds.includes(moving.kind))moving.kind='';if(level===3&&st.first)moving.kind=st.first}
+ // 風の段（10段ごと）：ブロックが動く線に沿って片方向に吹く。特殊ブロックにはしない
+ if(level>=WIND_EVERY&&level%WIND_EVERY===0&&(!isStage()||st.wind)){moving.kind='';moving.wind=Math.random()<.5?1:-1;if(state==='playing')beep('wind')}
+ const k=KINDS[moving.kind];
+ if(k){moving.color=k.color;if(moving.kind==='ice')moving.speed*=1.35;if(state==='playing')beep('special')}}
+// 追い風（風と同じ向きに動く）は1.4倍、向かい風は0.6倍
+const windFactor=()=>moving&&moving.wind?(moving.dir===moving.wind?1.4:.6):1;
+function reset(preview=false){state=preview?'ready':'playing';theme=pickTheme(preview);stack=[{x:0,y:H/2,z:0,w:BASE,d:BASE,color:theme.blocks[0]}];moving=null;falling=[];sparks=[];score=0;combo=0;maxCombo=0;perfects=0;bonusSeconds=0;residents=0;elapsed=0;totalPlayed=0;endsIn=0;camY=1.8;camTarget=1.8;charms=0;viewing=false;camDist=camDistT=CAM_DIST;camLift=camLiftT=CAM_LIFT;camAzTarget=nearAngle(ANGLES[angleChoice]);winds=[];skyM=0;applySky(0);newBadges=[];endReason='miss';
+ if(preview){mode='endless';for(let n=1;n<=3;n++){const w=BASE-.36*n;stack.push({x:.12*n,y:(n+.5)*H,z:-.1*n,w,d:w,color:theme.blocks[n%theme.blocks.length],born:-9,perfect:n===2})}newMoving();showPanel(el.start);if(logoLetters.length)logoIntro();setText(el.hint,'3D STACKING',['#eef9ff'],{flat:1});el.tip.textContent='PERFECTを続けると音がドレミと上がるよ！'}
+ else{newMoving();showPanel(null);setText(el.hint,'TAP TO STACK',['#eef9ff'],{flat:1});
+  el.tip.textContent=isStage()?'ゴール：'+STAGES[stageIdx].name+' '+STAGES[stageIdx].m+'m。ブロックは1往復するまでに置こう':'残り10秒を切ると得点2倍！4連続PERFECTでお守りゲット（最大3分）';beep('start')}
+ updateHud()}
+function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
+// ステージ選択：★の数と、まだ遊べないステージは🔒
+// ステージ選択：ステージ1を一番下に、タワーのように積み上げる。開くたびに下から落ちてきて積み上がる
+const SLAB_OFFSETS=[0,14,5,17,8,12];
+function openStages(){showPanel(el.stagePanel);blockText($('stageTitle'),'STAGE');const list=$('stageList');list.innerHTML='';
+ STAGES.forEach((s,i)=>{const ok=unlocked(i),n=stageStars[i],col=BLOCK_COLORS[(i+2)%BLOCK_COLORS.length];
+  const b=document.createElement('button');b.className='sitem';b.disabled=!ok;b.style.cssText='--face:'+col+';--top:'+mixHex(col,'#ffffff',.5)+';--side:'+mixHex(col,'#1c2747',.3)+';margin-left:'+SLAB_OFFSETS[i]+'px;animation-delay:'+(i*.09)+'s';
+  b.innerHTML='<svg class="num"></svg><span>'+(ok?s.name:'？？？')+'<small>'+s.m+'m・'+goalFloors(i)+'段</small></span><span class="stars">'+(ok?(n?'★'.repeat(n)+'☆'.repeat(3-n):'NEW'):'🔒')+'</span>';
+  blockText(b.querySelector('.num'),String(i+1),[ok?'#ffffff':'#8d97b8']);b.addEventListener('click',()=>openIntro(i));list.appendChild(b)});
+ // てっぺんに「つづき」を予告（次の目標：エンパイア・ステート・ビル）
+ const g=document.createElement('div');g.className='sitem ghost';g.style.marginLeft=SLAB_OFFSETS[5]+'px';g.innerHTML='<span>つづきは近日公開…<small>めざせ ブルジュ・ハリファ 828m</small></span>';list.appendChild(g);
+ list.scrollTop=list.scrollHeight}
+// ステージ紹介：遊ぶ前に、新しく出る仕掛けを1つだけ説明する（プレイ中は読む余裕がないため）
+function openIntro(i){stageIdx=i;showPanel(el.intro);blockText($('introBadge'),'STAGE '+(i+1));$('introTitle').textContent=STAGES[i].name+'（'+STAGES[i].m+'m）';
+ $('introText').textContent=STAGES[i].intro;$('introStars').textContent='★★★ … PERFECT率70%以上でクリア'}
+// 空の色を高さ(m)に合わせて塗り替える（0.5m以上変わったときだけ）
+function applySky(m){if(Math.abs(m-skyShown)<.5)return;skyShown=m;let i=0;while(i<SKY.length-2&&m>SKY[i+1][0])i++;
+ const [m0,c0,s0]=SKY[i],[m1,c1,s1]=SKY[i+1],t=Math.max(0,Math.min(1,(m-m0)/(m1-m0))),c=c0.map((v,k)=>mixHex(v,c1[k],t));
+ el.stage.style.background='linear-gradient(165deg,'+c[0]+' 0%,'+c[1]+' 43%,'+c[2]+' 78%,'+c[3]+' 100%)';el.stage.style.setProperty('--stars',(s0+(s1-s0)*t).toFixed(2))}
+// 自動回転で何周もした後でも、近い向きへ戻す
+const nearAngle=a=>a+Math.PI*2*Math.round((camAz-a)/(Math.PI*2));
+// できたタワーを見る：全体が入るまでカメラを引いて、ゆっくり回す
+function viewTower(){if(state!=='over')return;viewing=true;el.overlay.hidden=true;const top=stack.length*H;camTarget=top/2;camDistT=Math.max(CAM_DIST,(top/2+2.5)*2.35);camLiftT=camDistT*.28;setText(el.hint,'タップで結果にもどる');updateHud()}
+function closeView(){viewing=false;el.overlay.hidden=false;menuShownAt=performance.now();camTarget=Math.max(1.8,(stack.length-5.5)*H+1.8);camDistT=CAM_DIST;camLiftT=CAM_LIFT;camAzTarget=nearAngle(ANGLES[angleChoice]);setText(el.hint,'TRY AGAIN',['#eef9ff'],{flat:1});updateHud()}
+// バッジ一覧：取ったものはアイコンと名前、まだのものは取り方を表示。今回取ったものは光らせる
+let badgeFrom=null;
+function openBadges(from){badgeFrom=from;from.hidden=true;$('badgePanel').hidden=false;blockText($('badgeTitle'),'BADGES');$('badgeCount').textContent='あつめたバッジ '+badges.size+' / '+BADGES.length;
+ $('badgeGrid').innerHTML=BADGES.map(([id,icon,name,how])=>{const got=badges.has(id);return '<div class="bitem'+(got?'':' locked')+(newBadges.includes(id)?' new':'')+'"><i>'+(got?icon:'？')+'</i>'+(got?name:how)+'</div>'}).join('')}
+function closeBadges(){$('badgePanel').hidden=true;if(badgeFrom)badgeFrom.hidden=false}
+function fx(message,col='#fff0a5',detail=''){ setText($('effect-title'),message.replace('×','X'),[col]); $('effect-detail').textContent=detail;el.effect.style.color=col;el.effect.classList.remove('show');void el.effect.offsetWidth;el.effect.classList.add('show')}
+function flashTime(){const stat=el.time.parentElement;stat.classList.remove('bonus-flash');void stat.offsetWidth;stat.classList.add('bonus-flash')}
+const fmtSec=n=>Math.round(n*10)/10;
+function confetti(b){for(let i=0;i<24;i++){const t=Math.random()*Math.PI*2;const speed=1+Math.random()*2.8;sparks.push({x:b.x+(Math.random()-.5)*b.w,y:b.y+H*.38,z:b.z+(Math.random()-.5)*b.d,vx:Math.cos(t)*speed,vy:1.8+Math.random()*3,vz:Math.sin(t)*speed,life:.5+Math.random()*.6,color:i%3===0?'#fff5bd':i%3===1?'#ffffff':'#97fff0'})}}
+function addFalling(x,z,w,d,y,color,dir,axis){if(w<=.003||d<=.003)return;falling.push({x,y,z,w,d,color,vx:axis==='x'?dir*1.9:(Math.random()-.5)*.5,vz:axis==='z'?dir*1.9:(Math.random()-.5)*.5,vy:.1,tilt:0,life:2.2})}
+function place(){if(state!=='playing'||!moving)return;const prev=stack[stack.length-1],axis=moving.axis,p=moving[axis],c=prev[axis],width=axis==='x'?'w':'d';let delta=p-c;const tolerance=.15;
+ // 得点倍率：ギリギリ（残り10秒未満）2倍・氷2倍・金PERFECT3倍。かけ算で重なる
+ const kind=moving.kind,wasWind=moving.wind,isPerfect=Math.abs(delta)<=tolerance,tags=[isHurry()&&'ギリギリ2倍',kind==='ice'&&'氷2倍',isPerfect&&kind==='gold'&&'金3倍'].filter(Boolean);
+ const mult=(isHurry()?2:1)*(kind==='ice'?2:1)*(isPerfect&&kind==='gold'?3:1),tagText=tags.length?'（'+tags.join('・')+'）':'';let block,title,color,detail;
+ if(isPerfect){block={...moving,x:prev.x,z:prev.z,w:prev.w,d:prev.d,perfect:true};combo++;maxCombo=Math.max(maxCombo,combo);perfects++;
+ const points=(20+Math.min(4,combo-1)*10)*mult,requestedTime=isStage()?0:1+Math.min(2,combo-1);score+=points;
+ const before=elapsed;elapsed=Math.max(MAX_TIME-TIME_CAP,elapsed-requestedTime);const gained=before-elapsed;bonusSeconds+=gained;
+ title=kind==='gold'?'GOLD PERFECT!':combo>=2?'PERFECT ×'+combo:'PERFECT!';color=kind==='gold'?'#ffd34d':'#fff0a5';detail='+'+points+'点'+tagText+(gained>0?'  ＋'+fmtSec(gained)+'秒':'');
+ // ふくらむブロック：幅・奥行きを少し取り戻す
+ if(kind==='grow'){block.w=Math.min(BASE,prev.w+.5);block.d=Math.min(BASE,prev.d+.5);title='ふくらんだ！';color='#6dff8e'}
+ // お守り：4連続PERFECTごとに1つ（最大3つ）。気づきやすいよう見出しで知らせる
+ if(combo%CHARM_EVERY===0&&charms<MAX_CHARMS){charms++;detail=title+'  '+detail;title='お守りゲット！';color='#ff9ad5';beep('charm')}
+ if(combo>=5)award('c5');if(combo>=10)award('c10');if(combo>=20)award('c20');if(KINDS[kind])award(kind);if(wasWind)award('wind');if(tags.includes('ギリギリ2倍'))award('hurry');
+ if(gained>0)flashTime();confetti(block);beep('perfect',combo)}
+ else{const half=moving[width]/2,ph=prev[width]/2,left=Math.max(p-half,c-ph),right=Math.min(p+half,c+ph),overlap=right-left;
+ if(overlap<=.001){dropMoving('MISS!');return}
+ block={...moving,[axis]:(left+right)/2,[width]:overlap};
+ const cut=moving[width]-overlap;
+ if(cut>.002){const cutCenter=delta>0?right+cut/2:left-cut/2;let cx=moving.x,cz=moving.z;if(axis==='x')cx=cutCenter;else cz=cutCenter;
+ addFalling(cx,cz,axis==='x'?cut:moving.w,axis==='z'?cut:moving.d,moving.y,moving.color,delta>0?1:-1,axis)}
+ combo=0;const points=10*mult;score+=points;title='+'+points;color='#cff4ff';detail=tagText;beep('land')}
+ delete block.axis;delete block.dir;delete block.speed;delete block.kind;delete block.wind;block.born=clock;stack.push(block);residents+=residentsOf(block);moving=null;
+ // 実在の建物の高さを超えたら、その名前を大きく表示
+ const h=stack.length-1;
+ for(const [id,m] of [['h10',100],['tokyo',333],['sky',634],['burj',828]])if(h*FLOOR_M>=m)award(id);
+ if(residents>=300)award('r300');
+ const lm=LANDMARKS.filter(([m])=>m>(h-1)*FLOOR_M&&m<=h*FLOOR_M).pop();
+ if(lm){detail=h*FLOOR_M+'m到達！  '+title+(detail?' '+detail:'');title=lm[1]+' 超え！';color='#a8f0ff';beep('landmark')}
+ else if(!isStage()&&bestHeight>0&&h===bestHeight+1){detail=title+(detail?' '+detail:'');title='自己ベスト超え！';color='#ffe08a';beep('landmark')}
+ camTarget=Math.max(1.8,(stack.length-5.5)*H+1.8);
+ // ステージ：ゴールの高さに着いたらクリア（少し間をおいて結果へ）
+ if(isStage()&&h>=goalFloors(stageIdx)){fx('STAGE CLEAR!','#7dffb0',STAGES[stageIdx].name+'に到達！');beep('landmark');state='ending';endsIn=1.1;endReason='clear';updateHud();return}
+ fx(title,color,detail);newMoving();updateHud()}
+// 動いているブロックを落とす（ミス・時間切れ共通）。お守りがあれば1回だけセーフ
+function dropMoving(msg){const m=moving;addFalling(m.x,m.z,m.w,m.d,m.y,m.color,m.dir,m.axis);moving=null;combo=0;
+ if(charms>0){charms--;award('charm');fx('セーフ！','#b7ffe1','お守りを1つ使ったよ（のこり'+charms+'）');beep('land');newMoving();updateHud();return}
+ state='ending';endsIn=.72;endReason=msg==='MISS!'?'miss':'trip';fx(msg,'#ffabb4');beep('miss');updateHud()}
+function finish(reason){if(state==='over')return;
+ const h=stack.length-1,st=STAGES[stageIdx],clear=reason==='clear';if(!isStage()&&totalPlayed>=RUN_CAP)award('full');
+ state='over';moving=null;
+ // ★：クリアで1つ、PERFECT率50%以上で2つ、70%以上で3つ（ステージのみ）
+ const rate=h?perfects/h:0,stars=clear?(rate>=.7?3:rate>=.5?2:1):0;
+ if(clear){if(stars>stageStars[stageIdx]){stageStars[stageIdx]=stars;write('pittariTower3D.stageStars',JSON.stringify(stageStars))}if(stars===3)award('star3');if(stageStars.every(n=>n>0))award('allclear')}
+ const record=!isStage()&&score>best;if(record){best=score;write('pittariTower3D.best',best)}if(!isStage()&&h>bestHeight){bestHeight=h;write('pittariTower3D.bestHeight',bestHeight)}
+ const passed=LANDMARKS.filter(([m])=>m<=h*FLOOR_M).pop(),landmarkText=passed?passed[1]+'（'+passed[0]+'m）より高い！':'まずは'+LANDMARKS[0][1]+'（'+LANDMARKS[0][0]+'m）をめざそう';
+ const got=newBadges.map(id=>BADGES.find(b=>b[0]===id)),badgeText=got.length?'\n🏅 バッジ +'+got.length+'（'+got.map(b=>b[1]).join('')+'）':'';
+ if(isStage()){
+  blockText($('endBadge'),clear?'CLEAR!':reason==='trip'?'TIME UP':'GAME OVER');$('endTitle').textContent=clear?st.name+'に到達！':reason==='trip'?'時間切れ…':'落ちちゃった！';
+  $('endStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
+  $('endText').textContent=(clear?'PERFECT率 '+Math.round(rate*100)+'% ／ 最大'+maxCombo+'連続':'ゴールまで あと'+(goalFloors(stageIdx)-h)+'段（'+st.name+' '+st.m+'m）')+badgeText;
+ }else{
+  blockText($('endBadge'),record?'NEW RECORD!':reason==='time'?'TIME UP':'GAME OVER');$('endTitle').textContent=record?'新記録達成！':reason==='time'?'チャレンジ終了！':'落ちちゃった！';
+  $('endText').textContent=landmarkText+'\nPERFECT '+perfects+'回 ／ 最大'+maxCombo+'連続'+badgeText}
+ $('endStars').hidden=!(isStage()&&clear);
+ // クリアして次があれば「次のステージ」を一番目立たせ、「もう一度」は控えめに
+ const hasNext=isStage()&&clear&&stageIdx<STAGES.length-1;$('nextBtn').hidden=!hasNext;$('againBtn').className=hasNext?'sub':'primary';
+ setText($('menuBtn'),isStage()?'STAGES':'MENU',['#eaf1ff']);
+ setText($('badgeBtnEnd'),got.length?'BADGES +'+got.length:'BADGES',['#eaf1ff']);
+ $('finalScore').textContent=score;$('finalHeight').textContent=h*FLOOR_M+'m';$('finalResidents').textContent=residents+'人';showPanel(el.end);setText(el.hint,'TRY AGAIN',['#eef9ff'],{flat:1});updateHud()}
+function scaleNotes(n){const f=SCALE[Math.min(n,SCALE.length)-1];
+ // 8連続（ド）以降は「ドミソ」の和音でごほうび感を出す
+ return n>=SCALE.length?[[f,0,.22],[f*1.26,0,.22],[f*1.5,0,.22]]:[[f,0,.2]]}
+function beep(kind,n=1){if(!soundOn)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audio)audio=new AC();
+ // 音がまだ許可されていなければ、許可（指を離した瞬間）を待って鳴らす。0.9秒以上前の音は捨てる
+ if(audio.state!=='running'){const at=performance.now();audio.resume().then(()=>{if(performance.now()-at<900)playSound(kind,n)}).catch(()=>{});return}
+ playSound(kind,n)}catch{}}
+function playSound(kind,n){try{let t=audio.currentTime,notes=kind==='perfect'?scaleNotes(n):kind==='landmark'?[[784,.18,.1],[988,.28,.1],[1175,.38,.26]]:kind==='special'?[[1319,.22,.08],[1760,.3,.08],[2093,.38,.14]]:kind==='charm'?[[880,.12,.1],[1109,.2,.1],[1319,.28,.1],[1760,.36,.2]]:kind==='wind'?[[260,.2,.6]]:kind==='miss'?[[245,0,.27]]:kind==='start'?[[1400,0,.07],[2000,.07,.09]]:[[420,0,.09]];
+ for(const [f,delay,len]of notes){const o=audio.createOscillator(),g=audio.createGain();o.type=kind==='wind'?'triangle':'sine';o.frequency.setValueAtTime(f,t+delay);if(kind==='miss')o.frequency.exponentialRampToValueAtTime(110,t+delay+len);if(kind==='wind')o.frequency.exponentialRampToValueAtTime(820,t+delay+len*.6);if(kind==='start')o.frequency.exponentialRampToValueAtTime(f*.45,t+delay+len);g.gain.setValueAtTime(.0001,t+delay);g.gain.exponentialRampToValueAtTime(.08,t+delay+.012);g.gain.exponentialRampToValueAtTime(.0001,t+delay+len);o.connect(g);g.connect(audio.destination);o.start(t+delay);o.stop(t+delay+len+.025)}}catch{}}
+function update(dt){clock+=dt;
+ if(state==='playing'){if(!isStage()){elapsed=Math.min(MAX_TIME,elapsed+dt);totalPlayed+=dt}
+  if(!isStage()&&(elapsed>=MAX_TIME||totalPlayed>=RUN_CAP)){finish('time')}
+  else if(moving){const step=moving.speed*windFactor()*dt;moving[moving.axis]+=moving.dir*step;moving.trip+=step;if(moving[moving.axis]>MARGIN+1){moving[moving.axis]=MARGIN+1;moving.dir=-1}else if(moving[moving.axis]<-MARGIN-1){moving[moving.axis]=-MARGIN-1;moving.dir=1}
+   // ステージ：1往復して元の端に戻ったら時間切れで落ちる
+   if(isStage()&&moving.trip>=TRIP)dropMoving('時間切れ！')}
+  updateHud()}
+ if(state==='ready'&&moving){moving[moving.axis]+=moving.dir*moving.speed*dt;if(Math.abs(moving[moving.axis])>MARGIN+1){moving[moving.axis]=Math.sign(moving[moving.axis])*(MARGIN+1);moving.dir*=-1}}
+ if(state==='ending'){endsIn-=dt;if(endsIn<=0)finish(endReason)}
+ if(viewing){camAz+=dt*.45;camAzTarget=camAz}
+ if(state!=='ready'){skyM+=(meters()-skyM)*Math.min(1,dt*1.5);applySky(skyM)}
+ const camK=Math.min(1,dt*(viewing?1.6:4));camY+=(camTarget-camY)*camK;camDist+=(camDistT-camDist)*camK;camLift+=(camLiftT-camLift)*camK;camAz+=(camAzTarget-camAz)*Math.min(1,dt*3);
+ for(const b of falling){b.x+=b.vx*dt;b.z+=b.vz*dt;b.vy-=13*dt;b.y+=b.vy*dt;b.life-=dt}falling=falling.filter(b=>b.life>0&&b.y>camY-17);
+ // 特殊ブロックのまわりに粒を出し続ける（金＝舞い上がる／氷＝こぼれ落ちる／緑＝ふわっと）
+ if(moving&&KINDS[moving.kind]&&!viewing){sparkTimer-=dt;while(sparkTimer<0){sparkTimer+=.03;const m=moving,up=m.kind==='ice'?-.6:1.4+Math.random()*1.4;
+  sparks.push({x:m.x+(Math.random()-.5)*m.w*1.1,y:m.y+(Math.random()-.5)*H,z:m.z+(Math.random()-.5)*m.d*1.1,vx:(Math.random()-.5)*.8,vy:up,vz:(Math.random()-.5)*.8,life:.45+Math.random()*.4,color:KINDS[m.kind].spark,size:.15})}}
+ for(const s of sparks){s.x+=s.vx*dt;s.y+=s.vy*dt;s.z+=s.vz*dt;s.vy-=6*dt;s.life-=dt}sparks=sparks.filter(s=>s.life>0);
+ // 風の筋：ブロックが動く線に沿って、風の向きに流れる（筋と同じ向きに動く時が速い）
+ if(moving&&moving.wind&&state==='playing'){windTimer-=dt;while(windTimer<0){windTimer+=.07;const m=moving,other=m.axis==='x'?'z':'x',depth=m.axis==='x'?m.d:m.w;
+  winds.push({axis:m.axis,dir:m.wind,p:-m.wind*11,o:m[other]+(Math.random()-.5)*(depth+3),y:m.y+(Math.random()-.3)*1.8,v:14+Math.random()*6,len:1.2+Math.random()*1.4})}}
+ for(const w of winds)w.p+=w.dir*w.v*dt;winds=winds.filter(w=>Math.abs(w.p)<=11.5)}
+
+// Pure JavaScript perspective rasterizer for browsers with WebGL disabled.
+// It projects the SAME 3D coordinates as WebGL and supports camera rotation.
+function drawFallback(vp,eye){
+ const ctx=fallbackCtx,cssW=cv.clientWidth,cssH=cv.clientHeight;
+ ctx.setTransform(cv.width/cssW,0,0,cv.height/cssH,0,0);ctx.clearRect(0,0,cssW,cssH);
+ const point=(x,y,z)=>{const w=vp[3]*x+vp[7]*y+vp[11]*z+vp[15];if(w<=.01)return null;return [(1+(vp[0]*x+vp[4]*y+vp[8]*z+vp[12])/w)*cssW/2,(1-(vp[1]*x+vp[5]*y+vp[9]*z+vp[13])/w)*cssH/2]};
+ const defs=[[[4,5,6,7],[0,0,1],.88],[[1,0,3,2],[0,0,-1],.65],[[0,4,7,3],[-1,0,0],.73],[[5,1,2,6],[1,0,0],.97],[[3,7,6,2],[0,1,0],1.22],[[0,1,5,4],[0,-1,0],.5]];
+ const polys=[];
+ for(const b of boxRecords){const {x,y,z,w,h,d,color,alpha,drawEdges}=b;
+   const X0=x-w/2,X1=x+w/2,Y0=y-h/2,Y1=y+h/2,Z0=z-d/2,Z1=z+d/2;
+   const vertices=[[X0,Y0,Z0],[X1,Y0,Z0],[X1,Y1,Z0],[X0,Y1,Z0],[X0,Y0,Z1],[X1,Y0,Z1],[X1,Y1,Z1],[X0,Y1,Z1]];
+   const [r,g,bl]=rgb(color);const boxPolys=[];
+   for(const [ids,norm,bright] of defs){const center=[0,0,0];for(const id of ids)for(let k=0;k<3;k++)center[k]+=vertices[id][k]/4;
+     const towards=norm.reduce((s,n,i)=>s+n*(eye[i]-center[i]),0);if(towards<=0)continue;
+     const pts=ids.map(i=>point(...vertices[i]));if(pts.some(p=>p===null))continue;
+     const distance=(eye[0]-center[0])**2+(eye[1]-center[1])**2+(eye[2]-center[2])**2;
+     const c=([r,g,bl].map(v=>Math.round(255*Math.min(1,v*bright))));
+     boxPolys.push({pts,distance,color:`rgb(${c[0]},${c[1]},${c[2]})`,alpha,drawEdges});
+   }
+   boxPolys.sort((a,b)=>b.distance-a.distance);polys.push(...boxPolys);
+ }
+ for(const q of polys){ctx.save();ctx.globalAlpha=q.alpha;ctx.beginPath();ctx.moveTo(...q.pts[0]);for(let i=1;i<q.pts.length;i++)ctx.lineTo(...q.pts[i]);ctx.closePath();ctx.fillStyle=q.color;ctx.fill();if(q.drawEdges){ctx.strokeStyle='rgba(255,255,255,.34)';ctx.lineWidth=1.2;ctx.stroke()}ctx.restore()}
+}
+// 住人の窓：置いた階の4面に明かりがともる。カメラに向いた面だけ描く（裏の窓が手前に透けないように）
+function windows(b,eye){const a=Math.min(1,(clock-b.born)*2.5);if(a<=0)return;
+ const col=b.perfect?theme.winP:theme.win,wh=H*.42,t=.04,nx=windowsFor(b.w),nz=windowsFor(b.d),sx=Math.min(.34,b.w/nx*.6),sz=Math.min(.34,b.d/nz*.6);
+ for(const s of [1,-1]){
+  const fz=b.z+s*(b.d/2+t/2);if(s*(eye[2]-fz)>0)for(let i=0;i<nx;i++)box(b.x-b.w/2+b.w*(i+.5)/nx,b.y,fz,sx,wh,t,col,a,false);
+  const fx_=b.x+s*(b.w/2+t/2);if(s*(eye[0]-fx_)>0)for(let i=0;i<nz;i++)box(fx_,b.y,b.z-b.d/2+b.d*(i+.5)/nz,t,wh,sz,col,a,false)}}
+function render(){faces=[];edges=[];boxRecords=[];
+ // A perspective camera circles the tower: geometry really has depth, not 2D isometric sprites.
+ const eye=[Math.sin(camAz)*camDist,camY+camLift,Math.cos(camAz)*camDist];
+ // Floating island & base pedestal, both genuine 3D cuboids.
+ if(camY<8||viewing){box(0,-.55,0,8.6,.60,8.6,'#3c416e',1);box(0,-.20,0,8.15,.14,8.15,'#747fb5',1);box(0,-.11,0,5.75,.16,5.75,'#a5bce4',1)}
+ for(const b of stack){box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
+ // 雲：てっぺんより下にだけ出す（動くブロックを隠さないように）。積むほど雲を突き抜けていく
+ const topY=stack[stack.length-1].y;
+ for(const c of CLOUDS){if(c.y>topY-.5||(!viewing&&Math.abs(c.y-camY)>14))continue;const a=c.a+clock*.04,x=Math.cos(a)*c.r,z=Math.sin(a)*c.r,s=c.s;
+  box(x,c.y,z,2.2*s,.35*s,1.4*s,'#ffffff',.8,false);box(x+.8*s,c.y+.2*s,z+.2*s,1.4*s,.4*s,1.1*s,'#ffffff',.8,false);box(x-.9*s,c.y+.05*s,z-.1*s,1.2*s,.3*s,1*s,'#f4f8ff',.8,false)}
+ // 枠：エンドレスは自己ベストの高さ（金色）、ステージはゴールの高さ（緑・少し太め）
+ const frame=(y,s,t,c)=>{box(0,y,s/2,s,t,t,c,.8,false);box(0,y,-s/2,s,t,t,c,.8,false);box(s/2,y,0,t,t,s,c,.8,false);box(-s/2,y,0,t,t,s,c,.8,false)};
+ if(state!=='ready'&&isStage())frame((goalFloors(stageIdx)+1)*H,6.6,.11,'#7dffb0');
+ else if(state!=='ready'&&bestHeight>0)frame((bestHeight+1)*H,6.2,.07,'#ffe08a');
+ // 動くブロック：特殊ブロックは光る。ステージで1往復の残りが少ないと赤く点滅
+ if(moving){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*10)+1)/2):moving.color;
+  const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/TRIP-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
+  box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col);
+  // 特殊ブロックの上面に、白いドット絵のマーク
+  const mk=KIND_MARKS[moving.kind];if(mk){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.035;
+   mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,'#ffffff',1,false)}))}}
+ // お守り：持っている数だけ、動くブロックより上でピンクのキューブが小さく回る
+ if(charms>0&&!viewing){const top=stack[stack.length-1];for(let i=0;i<charms;i++){const a=clock*1.8+i*Math.PI*2/charms;box(Math.cos(a)*1.6,top.y+H*4.2+Math.sin(clock*3+i)*.12,Math.sin(a)*1.6,.34,.34,.34,'#ff8fd0',1)}}
+ for(const b of falling){box(b.x,b.y,b.z,b.w,H,b.d,b.color,Math.min(1,b.life/.5))}
+ for(const w of winds){const a=Math.max(0,Math.min(1,(11.5-Math.abs(w.p))/3))*.75,t=.06;if(w.axis==='x')box(w.p,w.y,w.o,w.len,t,t,'#ffffff',a,false);else box(w.o,w.y,w.p,t,t,w.len,'#ffffff',a,false)}
+ for(const s of sparks){const z=s.size||.09;box(s.x,s.y,s.z,z,z,z,s.color,Math.min(1,s.life*1.8),false)}
+ const rectAspect=cv.width/cv.height;
+ const look=[0,camY,0];const vp=m4mul(perspective(48*Math.PI/180,rectAspect,.1,400),lookAt(eye,look));
+ if(!gl){drawFallback(vp,eye);return;}gl.uniformMatrix4fv(uVP,false,vp);
+ gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);drawBuffer(faceBuffer,faces,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edges,gl.LINES)}
+function tick(t){let dt=Math.min((t-last)/1000||0,.04);last=t;
+ // メニューが出ている間は、出てから2秒（落下中のブロックやカメラが落ち着くまで）で3D画面を止める＝タップの反応を軽くする
+ const idle=!el.overlay.hidden&&(state==='ready'||state==='over')&&t-menuShownAt>2000;
+ if(!idle){update(dt);render()}requestAnimationFrame(tick)}
+// ===== タイトルロゴ：5×5マスのブロック文字。ゲームと同じ「上・前・横の3段階ベタ塗り＋細い白線」 =====
+const LOGO_FONT={T:['11111','00100','00100','00100','00100'],I:['111','010','010','010','111'],P:['11110','10001','11110','10000','10000'],
+ O:['01110','10001','10001','10001','01110'],W:['10001','10001','10101','10101','01010'],E:['11111','10000','11110','10000','11111'],R:['11110','10001','11110','10010','10001'],
+ A:['01110','10001','11111','10001','10001'],B:['11110','10001','11110','10001','11110'],C:['01111','10000','10000','10000','01111'],D:['11110','10001','10001','10001','11110'],
+ G:['01111','10000','10011','10001','01111'],L:['10000','10000','10000','10000','11111'],M:['10001','11011','10101','10001','10001'],N:['10001','11001','10101','10011','10001'],
+ S:['01111','10000','01110','00001','11110'],U:['10001','10001','10001','10001','01110'],V:['10001','10001','10001','01010','00100'],'!':['1','1','1','0','1'],
+ '0':['01110','10011','10101','11001','01110'],'1':['010','110','010','010','111'],'2':['11110','00001','01110','10000','11111'],'3':['11110','00001','01110','00001','11110'],
+ '4':['10010','10010','11111','00010','00010'],'5':['11111','10000','11110','00001','11110'],'6':['01110','10000','11110','10001','01110'],'7':['11111','00001','00010','00100','00100'],
+ '8':['01110','10001','01110','10001','01110'],'9':['01110','10001','01111','00001','01110'],
+ F:['11111','10000','11110','10000','10000'],H:['10001','10001','11111','10001','10001'],K:['10001','10010','11100','10010','10001'],
+ X:['10001','01010','00100','01010','10001'],Y:['10001','01010','00100','00100','00100'],'+':['000','010','111','010','000'],'-':['000','000','111','000','000']};
+const BLOCK_COLORS=['#fff09a','#ffb2a8','#7cddf1','#c8a4ff','#84e3c9'];
+// ブロック文字の1文字分を、上の面・横の面・前の面の3本のパスで描く（部品を減らして軽くする）
+function blockPaths(parent,cells,w,d,col,top,side,st){if(!d){let F='';for(const [x,y] of cells)F+=`M${+x.toFixed(2)} ${+y.toFixed(2)}h${w}v${w}h${-w}Z`;svgEl('path',{d:F,fill:col},parent);return}const f=n=>+n.toFixed(2);let T='',S='',F='';
+ for(const [x,y] of cells){T+=`M${f(x)} ${f(y)}L${f(x+d)} ${f(y-d)}L${f(x+w+d)} ${f(y-d)}L${f(x+w)} ${f(y)}Z`;S+=`M${f(x+w)} ${f(y)}L${f(x+w+d)} ${f(y-d)}L${f(x+w+d)} ${f(y+w-d)}L${f(x+w)} ${f(y+w)}Z`;F+=`M${f(x)} ${f(y)}h${f(w)}v${f(w)}h${f(-w)}Z`}
+ svgEl('path',{d:T,fill:top,...st},parent);svgEl('path',{d:S,fill:side,...st},parent);svgEl('path',{d:F,fill:col,...st},parent)}
+// 見出し用ブロック文字（ロゴと同じ描き方を小さく）。colors を省くと1文字ずつパステルを順番に
+function blockText(svg,text,colors,opts={}){svg.innerHTML='';svg.setAttribute('aria-label',text);const c=4,g=opts.flat?.6:.38,d=opts.flat?0:1.5,w=c-g;let cx=0,i=0;
+ for(const ch of text){if(ch===' '){cx+=c*2;continue}const rows=LOGO_FONT[ch];if(!rows)continue;const col=colors?colors[i%colors.length]:BLOCK_COLORS[i%BLOCK_COLORS.length],top=mixHex(col,'#ffffff',.5),side=mixHex(col,'#1c2747',.3);
+  const cells=[];rows.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')cells.push([cx+k*c,d+r*c])}));const st={stroke:'#ffffff','stroke-opacity':.45,'stroke-width':.22};
+  blockPaths(svg,cells,w,d,col,top,side,st);cx+=(rows[0].length+1)*c;i++}
+ svg.setAttribute('viewBox','-.5 -.5 '+(cx-c+d+1)+' '+(5*c+d+1))}
+const SVGNS='http://www.w3.org/2000/svg';
+// 決まった文言をブロック文字で表示する（フォントに無い文字＝日本語などは普通の文字で表示）。同じ内容なら描き直さない
+const blockable=t=>[...t].every(ch=>ch===' '||LOGO_FONT[ch]);
+function setText(el,text,colors,opts={}){const key=text+'|'+(colors||'')+'|'+(opts.flat?1:0);if(el._bt===key)return;el._bt=key;
+ if(!blockable(text)){el.textContent=text;return}el.textContent='';const sv=document.createElementNS(SVGNS,'svg');sv.setAttribute('class','bt'+(opts.flat?' flat':''));sv.setAttribute('role','img');el.appendChild(sv);blockText(sv,text,colors,opts);
+ if(opts.sub){const sm=document.createElement('small');sm.textContent=opts.sub;el.appendChild(sm)}}
+const svgEl=(tag,attrs,parent)=>{const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e};
+let logoLetters=[],logoTaps=0,logoLastTap=-9;
+function buildLogo(){const svg=$('logo');svg.innerHTML='';logoLetters=[];
+ const C=10,M=14,D=3.6,GAP=.9;
+ // 1行目「TIP TOP」、2行目「TOWER」は1行目と同じ幅になるよう少し大きく
+ const lineDefs=[{text:'TIP TOP',colors:['#fff09a','#fff09a','#fff09a','','#ffb2a8','#ffb2a8','#ffb2a8'],shift:4},{text:'TOWER',colors:Array(5).fill('#7cddf1'),shift:0}];
+ const cellsWide=t=>[...t].reduce((s,ch,i)=>s+(i?1:0)+(ch===' '?1:LOGO_FONT[ch][0].length),0);
+ const W1=cellsWide(lineDefs[0].text);lineDefs[0].c=C;lineDefs[1].c=C*W1/cellsWide(lineDefs[1].text);
+ const y1=M+D,y2=y1+5*C+D+8,width=W1*C+lineDefs[0].shift,height=y2+5*lineDefs[1].c;
+ svg.setAttribute('viewBox',(-M)+' '+(-6)+' '+(width+2*M)+' '+(height+M));
+ // 背景：またたく四角い星と、カクカクの雲（文字の後ろ）
+ [[-10,6],[width+6,0],[width+9,y2-4],[-12,y2+10],[width*.52,-3],[width*.2,y2-9]].forEach(([x,y],i)=>svgEl('rect',{x,y,width:2.4,height:2.4,fill:'#fff',class:'star',style:'animation-delay:'+(i*.45)+'s'},svg));
+ const cloud=(x,y,s)=>{const g=svgEl('g',{class:'cloud'},svg);[[0,2,14,5,'#ffffff'],[4,-1,9,5,'#ffffff'],[11,1,8,5,'#e8eeff']].forEach(([dx,dy,w,h,f])=>svgEl('rect',{x:x+dx*s,y:y+dy*s,width:w*s,height:h*s,fill:f,opacity:.92},g))};
+ cloud(-M-4,y2+5*lineDefs[1].c-16,2);cloud(width+1,y2-9,1.4);
+ // 文字：下の段（TOWER）から順に落ちてくるよう、登場の順番を決める
+ let order=0;const drops=[];
+ lineDefs.forEach((L,li)=>{let cx=L.shift;const y0=li?y2:y1,c=L.c,g=c*GAP/C,d=D*c/C;
+  [...L.text].forEach((ch,i)=>{if(ch===' '){cx+=c*2;return}
+   const rows=LOGO_FONT[ch],col=L.colors[i],top=mixHex(col,'#ffffff',.5),side=mixHex(col,'#1c2747',.3),gr=svgEl('g',{class:'lt'},svg),cells=[];
+   rows.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')cells.push([cx+k*c,y0+r*c])}));
+   const w=c-g,st={stroke:'#ffffff','stroke-opacity':.4,'stroke-width':.45,'stroke-linejoin':'round'};
+   // 先に「上の面・横の面」、あとで「前の面」を描く（前の面が一番手前）
+   blockPaths(gr,cells,w,d,col,top,side,st);
+   // 当たり判定：ブロックのすき間を触っても反応するよう、文字全体を覆う見えない四角
+   const xs=cells.map(q=>q[0]),ys=cells.map(q=>q[1]);svgEl('rect',{x:Math.min(...xs)-2,y:Math.min(...ys)-d-3,width:Math.max(...xs)-Math.min(...xs)+c+d+4,height:Math.max(...ys)-Math.min(...ys)+c+d+5,fill:'#000','fill-opacity':0},gr);
+   gr.addEventListener('pointerdown',e=>{e.preventDefault();popLetter(gr)});
+   logoLetters.push(gr);drops.push([li,gr]);cx+=(rows[0].length+1)*c})});
+ // 登場順：TOWER（2行目）→ TIP TOP（1行目）
+ drops.sort((a,b)=>b[0]-a[0]).forEach(([,gr],n)=>gr.dataset.delay=(n*.085)+'s');logoIntro()}
+function logoIntro(){for(const g of logoLetters){g.classList.remove('drop','pop');g.style.animationDelay=g.dataset.delay;void g.getBBox();g.classList.add('drop')}}
+// 触った文字がぴょんと跳ねて、ブロックの粒が飛び散る。続けて触るとドレミと音が上がる
+function popLetter(g){g.classList.remove('drop','pop');g.style.animationDelay='0s';void g.getBBox();g.classList.add('pop');
+ const now=performance.now()/1000;if(now-logoLastTap>1.4)logoTaps=0;logoTaps++;logoLastTap=now;
+ // 音は動きを始めたあとで鳴らす（初回は音の準備に0.3秒ほどかかり、見た目の反応が遅れていたため）
+ const step=(logoTaps-1)%14,note=step<8?step:14-step;beep('perfect',note+1);
+ const b=g.getBBox(),svg=$('logo'),cols=['#ffffff','#fff09a','#ffb2a8','#7cddf1','#c8a4ff'];
+ for(let i=0;i<10;i++){const a=-Math.PI*(.1+.8*Math.random()),r=18+Math.random()*26,s=2+Math.random()*2.4;
+  const sp=svgEl('rect',{x:b.x+b.width/2-s/2,y:b.y+b.height*.3,width:s,height:s,fill:cols[i%cols.length],class:'sp',style:`--dx:${(Math.cos(a)*r).toFixed(1)}px;--dy:${(Math.sin(a)*r).toFixed(1)}px;--r:${(Math.random()*180-90).toFixed(0)}deg`},svg);
+  setTimeout(()=>sp.remove(),800)}}
+buildLogo();
+// 固定のボタン・ラベルをブロック文字に（日本語の小さい説明はモード選択だけ残す）
+setText($('startBtn'),'ENDLESS',['#2a2440'],{sub:'60秒の記録チャレンジ'});setText($('stageBtn'),'STAGE',['#2a2440'],{sub:'建物の高さまで積めばクリア'});
+setText($('badgeBtnStart'),'BADGES',['#eaf1ff']);setText($('introStart'),'START',['#2a2440']);setText($('introBack'),'BACK',['#eaf1ff']);setText($('badgeBack'),'BACK',['#eaf1ff']);
+setText($('nextBtn'),'NEXT STAGE',['#2a2440']);setText($('againBtn'),'RETRY',['#2a2440']);setText($('viewBtn'),'VIEW',['#eaf1ff']);setText($('badgeBtnEnd'),'BADGES',['#eaf1ff']);setText($('menuBtn'),'MENU',['#eaf1ff']);
+setText($('restart'),'RESTART',['#eaf1ff']);setText($('rotate'),'CAMERA',['#eaf1ff']);
+setText($('lblBest'),'BEST SCORE',['#becae2'],{flat:1});setText($('lblHeight'),'HEIGHT',['#becae2'],{flat:1});setText($('lblScore'),'SCORE',['#becae2'],{flat:1});setText($('lblCombo'),'COMBO',['#becae2'],{flat:1});
+setText($('lblFScore'),'SCORE',['#becae2'],{flat:1});setText($('lblFHeight'),'HEIGHT',['#becae2'],{flat:1});setText($('lblFPeople'),'PEOPLE',['#becae2'],{flat:1});
+// 音の準備（重い処理）はページを開いた時点で済ませておく。鳴らすのはタップ時（ブラウザの決まりで、タップまでは一時停止状態）
+try{const AC=window.AudioContext||window.webkitAudioContext;if(AC&&!audio)audio=new AC()}catch{}
+// 指を離した瞬間などに音を許可してもらう（スマホのブラウザは、触れた瞬間では許可しない）
+for(const ev of ['pointerup','touchend','click','keydown'])document.addEventListener(ev,()=>{if(audio&&audio.state!=='running')audio.resume().catch(()=>{})},{capture:true,passive:true});
+$('startBtn').addEventListener('click',()=>startGame('endless'));$('againBtn').addEventListener('click',()=>reset(false));
+$('stageBtn').addEventListener('click',openStages);$('stageBack').addEventListener('click',()=>showPanel(el.start));
+$('introStart').addEventListener('click',()=>startGame('stage',stageIdx));$('introBack').addEventListener('click',openStages);
+$('nextBtn').addEventListener('click',()=>{reset(true);openIntro(stageIdx+1)});
+$('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);if(wasStage)openStages()});$('restart').addEventListener('click',()=>reset(false));$('viewBtn').addEventListener('click',viewTower);
+$('badgeBtnStart').addEventListener('click',()=>openBadges(el.start));$('badgeBtnEnd').addEventListener('click',()=>openBadges(el.end));$('badgeBack').addEventListener('click',closeBadges);
+$('rotate').addEventListener('click',()=>{angleChoice=(angleChoice+1)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice])});
+$('sound').addEventListener('click',()=>{soundOn=!soundOn;write('pittariTower3D.sound',soundOn?'on':'off');setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));if(soundOn)beep('land')});
+cv.addEventListener('pointerdown',e=>{e.preventDefault();if(viewing)closeView();else place()},{passive:false});
+document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
+document.addEventListener('visibilitychange',()=>{last=0});setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));reset(true);requestAnimationFrame(tick);
+})();
+</script>
+</body></html>

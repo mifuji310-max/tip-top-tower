@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.21.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.21.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.21.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.21.1">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.21.1">
+<link rel="manifest" href="manifest.webmanifest?v=0.21.1">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -32,7 +32,7 @@ h1 em{font-style:normal;color:#ffe9aa}.chip3d{display:inline-block;vertical-alig
 .stage:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:var(--stars,.42);background-image:radial-gradient(circle at 11% 15%,#fff 0 1px,transparent 2px),radial-gradient(circle at 78% 13%,#fff 0 1.4px,transparent 2.2px),radial-gradient(circle at 45% 24%,#fff 0 1px,transparent 2px),radial-gradient(circle at 88% 37%,#fff 0 1px,transparent 2px),radial-gradient(circle at 20% 42%,#fff 0 1px,transparent 2px),radial-gradient(circle at 68% 57%,#fff 0 1px,transparent 2px);background-size:233px 263px}
 canvas{display:block;width:100%;aspect-ratio:360 / 500;position:relative;z-index:1;touch-action:manipulation;cursor:pointer;outline:none}
 /* 霧：端と上がかすむ。真ん中（タワーの上）は晴れている */
-.fog{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1s;--fc:#f3eef2;background:linear-gradient(90deg,var(--fc) 0%,#f3eef2cc 14%,transparent 36%,transparent 64%,#f3eef2cc 86%,var(--fc) 100%),linear-gradient(180deg,#f3eef2dd 0%,transparent 34%);background-size:120% 100%,100% 100%;animation:fogDrift 9s ease-in-out infinite alternate}@keyframes fogDrift{from{background-position:0 0,0 0}to{background-position:100% 0,0 0}}@media(prefers-reduced-motion:reduce){.fog{animation:none}}
+.fog{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity 1s;background:linear-gradient(90deg,#eef0f6 0%,#eef0f6aa 12%,#eef0f600 32%,#eef0f600 68%,#eef0f6aa 88%,#eef0f6 100%),linear-gradient(180deg,#eef0f6bb 0%,#eef0f600 26%)}
 .stage-top{position:absolute;z-index:2;top:13px;left:12px;right:12px;display:flex;justify-content:space-between;pointer-events:none;gap:8px}
 .pill{background:#17264cb5;border:1px solid #c7e7ff72;color:#e8f5ff;padding:6px 10px;border-radius:99px;letter-spacing:.04em;font-weight:900;font-size:10px;box-shadow:0 3px 12px #13214b36}
 .bar{position:absolute;z-index:3;top:0;left:0;right:0;height:4px;background:#fff3}.bar>div{height:100%;background:linear-gradient(90deg,#66e8dc,#d4fdab,#ffcd88);width:100%}
@@ -153,7 +153,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.21.0';
+const VERSION='v0.21.1';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -380,8 +380,10 @@ function updateHud(){const next=LANDMARKS.find(([m])=>m>(state==='ready'?0:meter
   bw2=(!stg&&rem>MAX_TIME?100*Math.min(1,(rem-MAX_TIME)/(TIME_CAP-MAX_TIME)):0).toFixed(1)+'%';// R18：60秒を超えた分は金色
  if(el.bar._w!==bw){el.bar._w=bw;el.bar.style.width=bw}if(el.bar2._w!==bw2){el.bar2._w=bw2;el.bar2.style.width=bw2}
  setV(el.height,state==='ready'?0:stack.length-1);setV(el.score,score);setV(el.combo,combo);setV(el.best,best);setV(el.level,(stg?'STAGE '+(stageIdx+1):'LV '+(state==='ready'?1:stack.length))+(charms?' ・ お守り'+charms:''))}
+// ブロックの速さ：段が上がるほど速くなる。ステージは章が進むほど、出だしと上限が少し速い（第2章で約1割）
+function speedFor(level){const ch=isStage()?Math.floor(stageIdx/10):0;return Math.min(4.1*(1+.1*ch)+(level-1)*.28,8.7+.2*ch)}
 function newMoving(){const prev=stack[stack.length-1],level=stack.length,axis=level%2?'x':'z',positive=(level%4===2||level%4===3),side=positive?1:-1;
- moving={x:prev.x,z:prev.z,w:prev.w,d:prev.d,y:(level+.5)*H,color:theme.blocks[level%theme.blocks.length],axis,dir:-side,speed:Math.min(4.1+(level-1)*.28,8.7)};moving[axis]=side*(MARGIN+1.0);
+ moving={x:prev.x,z:prev.z,w:prev.w,d:prev.d,y:(level+.5)*H,color:theme.blocks[level%theme.blocks.length],axis,dir:-side,speed:speedFor(level)};moving[axis]=side*(MARGIN+1.0);
  // 特殊ブロック（3段目から）：金＝PERFECTで3倍／氷＝速いけど2倍／緑＝PERFECTでふくらむ（細くなった時だけ）
  const r=Math.random(),thin=prev.w*prev.d<BASE*BASE*.64;
  moving.kind=level<3?'':pickKind(r,thin,level);moving.trip=0;
@@ -401,7 +403,11 @@ function reset(preview=false){state=preview?'ready':'playing';setFog(!preview);m
   el.tip.textContent=isStage()?'ゴール：'+STAGES[stageIdx].name+' '+STAGES[stageIdx].m+'m。ブロックは1往復するまでに置こう':'4連続PERFECTでお守りゲット（最大3分）';beep('start')}
  updateHud()}
 // 霧の濃さ（ステージの fog：0〜3）。遊んでいる間だけ
-function setFog(on){const f=on&&isStage()?(STAGES[stageIdx].fog||0):0;$('fog').style.opacity=[0,.5,.72,.9][f]}
+// 霧（ステージの fog：0〜3）。動くブロックは、タワーの真ん中から離れると霧に溶けて見えなくなる。
+// 見えるのは真ん中から FOG_CLEAR の距離まで（うすい2.6／ふつう1.9／こい1.3。端までは6.6）。画面の白い層は雰囲気だけ
+let fogLevel=0;const FOG_CLEAR=[99,2.6,1.9,1.3],FOG_COLOR='#eef0f6';
+function setFog(on){fogLevel=on&&isStage()?(STAGES[stageIdx].fog||0):0;$('fog').style.opacity=[0,.45,.6,.75][fogLevel]}
+function fogVis(){if(!fogLevel||!moving)return 1;const d=Math.abs(moving[moving.axis]-stack[stack.length-1][moving.axis]);return Math.max(0,Math.min(1,1-(d-FOG_CLEAR[fogLevel])/1.1))}
 function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
 // ステージ選択：★の数と、まだ遊べないステージは🔒
 // ステージ選択：ステージ1を一番下に、タワーのように積み上げる。開くたびに下から落ちてきて積み上がる
@@ -418,7 +424,7 @@ function openStages(){showPanel(el.stagePanel);blockText($('stageTitle'),'STAGE'
  const cur=list.querySelectorAll('button.sitem')[STAGES.reduce((k,_,i)=>unlocked(i)?i:k,0)];list.scrollTop=cur.offsetTop-list.offsetTop-list.clientHeight/2+cur.offsetHeight/2}
 // ステージ紹介：遊ぶ前に、新しく出る仕掛けを1つだけ説明する（プレイ中は読む余裕がないため）
 function openIntro(i){stageIdx=i;showPanel(el.intro);blockText($('introBadge'),'STAGE '+(i+1));$('introTitle').textContent=STAGES[i].name+'（'+STAGES[i].m+'m）';
- $('introText').textContent=STAGES[i].intro;$('introStars').textContent='デザイン：'+themeForStage(i).name+'　／　★★★ … PERFECT率70%以上'}
+ $('introText').textContent=STAGES[i].intro;$('introStars').textContent='デザイン：'+themeForStage(i).name+'　／　★3：PERFECT 70%以上'}
 // 空の色を高さ(m)に合わせて塗り替える（0.5m以上変わったときだけ）
 function applySky(m){if(Math.abs(m-skyShown)<.5)return;skyShown=m;let i=0;while(i<SKY.length-2&&m>SKY[i+1][0])i++;
  const [m0,c0,s0]=SKY[i],[m1,c1,s1]=SKY[i+1],t=Math.max(0,Math.min(1,(m-m0)/(m1-m0))),c=c0.map((v,k)=>mixHex(v,c1[k],t));
@@ -606,7 +612,8 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  // 動くブロック：特殊ブロックは光る。ステージで1往復の残りが少ないと赤く点滅
  if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*(moving.kind==='thunder'?28:10))+1)/2):moving.color;
   const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/tripLimit()-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
-  const ga=moving.kind==='ghost'?ghostAlpha():1;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:1);
+  const fv=fogVis();if(fv<1)col=mixHex(col,FOG_COLOR,(1-fv)*.6);// 霧：真ん中から離れるほど白くかすんで消える
+  const ga=(moving.kind==='ghost'?ghostAlpha():1)*fv;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:ga>.98?1:ga);
   // ミニ：PERFECTで戻る「元の大きさ」を白い枠で見せる。この枠を下の段にぴったり重ねるつもりでタップすればよい
   if(moving.kind==='mini'){const pv=stack[stack.length-1];box(moving.x,moving.y,moving.z,pv.w,H*.96,pv.d,'#ffffff',.26+.1*Math.sin(clock*6))}
   // 特殊ブロックの上面に、白いドット絵のマーク

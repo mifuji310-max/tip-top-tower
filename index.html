@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.19.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.19.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.19.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.19.1">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.19.1">
+<link rel="manifest" href="manifest.webmanifest?v=0.19.1">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -120,6 +120,7 @@ button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .controls{display:flex;gap:7px;margin-top:11px}.controls button{flex:1;border:1px solid #536789;border-radius:12px;padding:11px 5px;background:#263455;color:#eaf3ff;font-size:12px;font-weight:850;min-width:0}.controls button:active{background:#41567c}
 .tip{text-align:center;margin:11px 2px 0;font-size:12px;line-height:1.6;color:#d5dff0}.fine{text-align:center;margin:6px 2px 0;font-size:10px;color:#a2b3d2}
 button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offset:2px}
+@media(max-height:720px){#startPanel .tagline{margin-bottom:4px}.logo{margin-bottom:0}#startPanel .primary{padding:9px 10px}}/* レビュー4回目 P2-05：低い画面でスタート画面がはみ出さないように */
 @media(max-height:750px){.wrap{padding-top:8px}header{margin-bottom:8px}.stats{margin-bottom:7px}.stat{padding-top:5px;padding-bottom:5px}.stat strong{font-size:20px}.controls{margin-top:8px}.tip{margin-top:7px}}
 </style>
 </head>
@@ -148,7 +149,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.19.0';
+const VERSION='v0.19.1';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -194,6 +195,21 @@ const VERSION='v0.19.0';
   R18 残り時間が60秒を超えた分がバーに出ない → 対応：超えた分（最大80秒）を金色のバーで重ねて表示。
   Gemini：状態のオブジェクト化・設定値の一元化 → 見送り（R14 と同じ）。ロケットの爽快感 → 対応：積み上がるときにカメラが揺れる。
           エンドレス後半の緊張感 → 対応：高く積むほど雷・おばけ・ミニが少しずつ出やすくなる。README → 遊び方・ホーム画面追加などを追記。
+*/
+/* ===== 外部コードレビュー 4回目（v0.19.0 が対象、2026-10-20。GPT）への回答 =====
+  P1-01 1コマの経過時間を0.25秒で打ち切るので、とても重い端末（2コマ/秒以下）では制限時間がのびる
+        → 対応：時間は1コマ1秒まで実時間で数える。画面を離れたときは今まで通り止まる（visibilitychange で last=0）。
+  P1-02 GPU を取り上げられている間もゲームが進む → 対応：glLost の間はゲームを止め、戻ったら時計を測り直す。
+  P1-03 sw.js が同じサイトの他のアプリの保存データまで消す → 対応：'tip-top-tower-' で始まる古い保存データだけ消す。
+  P1-04 オフラインのとき、何を頼まれても index.html を返す → 対応：ページを開くとき（navigate）だけ index.html。
+        それ以外で保存が無ければ 503（オフライン）を返す。
+  P2-01 保存の書き込みを待っていない → 対応：e.waitUntil で書き込み終わりまで待ち、失敗しても止まらないようにする。
+  P2-02 公開ファイルがそろっているか → 確認済み（v0.19.0 公開時に7ファイル保存を確認）。localhost でも登録できるようにした。
+  P2-03・P2-06 半透明・2D代わり描画の前後関係は近似 → 見送り：見た目の崩れが出たら対応。
+  P2-04 ステージ4でふくらむブロックが出ないままクリアできる → 仕様：細くなったときの助けとして出るブロック（説明もそのとおり）。
+  P2-05 低い画面（320×700）でスタート画面がわずかにはみ出す → 対応：高さ720px以下で余白を少しつめる。
+  P3-01 ミニを PERFECT で置くと急に大きくなる → 対応：動いている間、元の大きさを白い枠で見せる。ルールにも書いた。
+  P3-02 モジュール分け → 見送り（R14 と同じ）。
 */
 const $=id=>document.getElementById(id);const cv=$('game');$('ver').textContent=VERSION;
 const gl=cv.getContext('webgl',{antialias:true,alpha:true,preserveDrawingBuffer:false})||cv.getContext('experimental-webgl',{antialias:true,alpha:true});
@@ -548,6 +564,8 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*(moving.kind==='thunder'?28:10))+1)/2):moving.color;
   const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/TRIP-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
   const ga=moving.kind==='ghost'?ghostAlpha():1;if(ga>.02)box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,moving.kind==='ghost'?.8*ga:1);
+  // ミニ：PERFECTで戻る「元の大きさ」を白い枠で見せる。この枠を下の段にぴったり重ねるつもりでタップすればよい
+  if(moving.kind==='mini'){const pv=stack[stack.length-1];box(moving.x,moving.y,moving.z,pv.w,H*.96,pv.d,'#ffffff',.26+.1*Math.sin(clock*6))}
   // 特殊ブロックの上面に、白いドット絵のマーク
   const mk=KIND_MARKS[moving.kind];if(mk&&ga>.02){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.035;
    mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,(KINDS[moving.kind].mark||'#ffffff'),ga,false)}))}}
@@ -566,7 +584,9 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);drawBuffer(faceBuffer,faces,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edges,gl.LINES);
  // レビュー②：半透明のものは不透明なものの後に、奥行きを書き込まずに描く（後ろのブロックが抜けて見えないように）
  if(facesT.length||edgesT.length){gl.depthMask(false);gl.enable(gl.POLYGON_OFFSET_FILL);drawBuffer(faceBuffer,facesT,gl.TRIANGLES);gl.disable(gl.POLYGON_OFFSET_FILL);drawBuffer(lineBuffer,edgesT,gl.LINES);gl.depthMask(true)}}
-function tick(t){const raw=last?(t-last)/1000:0,dt=Math.min(raw,.04),rdt=Math.min(raw,.25);last=t;// R03：動きは0.04秒で打ち切り、時間は実時間（0.25秒まで）
+function tick(t){// レビュー4回目 P1-02：画面（WebGL）が消えている間はゲームを止める。戻ったら時計を測り直す
+ if(glLost){last=0;requestAnimationFrame(tick);return}
+ const raw=last?(t-last)/1000:0,dt=Math.min(raw,.04),rdt=Math.min(raw,1);last=t;// R03・レビュー4回目 P1-01：動きは0.04秒で打ち切り、時間は実時間（1コマ1秒まで。画面を離れたときは last=0 で止まる）
  // メニューが出ている間は、出てから2秒（落下中のブロックやカメラが落ち着くまで）で3D画面を止める＝タップの反応を軽くする
  const idle=!el.overlay.hidden&&(state==='ready'||state==='over')&&t-menuShownAt>2000;
  if(!idle){update(dt,rdt);render()}requestAnimationFrame(tick)}
@@ -639,11 +659,11 @@ function popLetter(g){g.classList.remove('drop','pop');g.style.animationDelay='0
   setTimeout(()=>sp.remove(),800)}}
 buildLogo();
 // R11：オフラインでも起動できるように（https で公開しているときだけ）
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 // ===== ルール説明ページ =====
 const KIND_INFO=[['gold','ロケット','PERFECTで置くと、さらに2段いっきに積み上がる（1回で3段＝30m）'],['ice','氷','いつもより速く動く'],['grow','ふくらむ','PERFECTで置くと少し太くなる（細くなったときに出る）'],
  ['magnet','磁石','近くで止めると吸い付いてPERFECTになる'],['warp','ワープ','往復しないで、端まで行くと反対の端から出てくる'],['ghost','おばけ','動いている途中で、ときどきフッと消える'],
- ['thunder','雷','外すと、ずれの2倍けずれる'],['mini','ミニ','幅が半分ぐらいで来る']];
+ ['thunder','雷','外すと、ずれの2倍けずれる'],['mini','ミニ','幅が半分ぐらいで来る。まわりの白い枠を下の段に合わせてタップ。PERFECTなら太さがもどる']];
 // 特殊ブロックの小さなアイコン（色の四角に白いドット絵のマーク）
 function kindIcon(kind){const k=KINDS[kind],m=KIND_MARKS[kind],bg=kind==='ghost'?'#ece8ff':k.color,fg=k.mark||'#ffffff';let r='';
  m.forEach((row,y)=>[...row].forEach((v,x)=>{if(v==='1')r+='<rect x="'+(1+x)+'" y="'+(1+y)+'" width=".9" height=".9" fill="'+fg+'"/>'}));
@@ -651,6 +671,7 @@ function kindIcon(kind){const k=KINDS[kind],m=KIND_MARKS[kind],bg=kind==='ghost'
 function openRules(){showPanel(el.rules);blockText($('rulesTitle'),'RULES');const body=$('rulesBody');if(body.dataset.done)return;body.dataset.done=1;
  body.innerHTML='<h3>あそびかた</h3><p>動いているブロックをタップして、下のブロックに重ねよう。はみ出した分は切れて落ちる。全部はずすとミス。</p>'
  +'<h3>PERFECT</h3><p>ぴったり重ねるとPERFECT。けずれない。続けるとドレミと音が上がる。</p>'
+ +'<h3>スコア</h3><p>置くたびに点が入る。ふつうは10点。PERFECTは20点で、続けるたびに＋10点（最大60点）。高さや太さは点にならない（太さは住人の数に出る）。</p>'
  +'<h3>お守り</h3><p>4回続けてPERFECTで1つもらえる（最大3つ）。ミスや時間切れを1回だけ助けてくれる。</p>'
  +'<h3>高さと住人</h3><p>1段＝10m。本物の建物の高さを超えると「○○超え！」。窓の数が住人の数。<b>太いまま高く積むほど住人がふえる。</b></p>'
  +'<h3>ENDLESS（エンドレス）</h3><p>60秒の記録チャレンジ。PERFECTで時間がのびる（最大3分）。</p>'

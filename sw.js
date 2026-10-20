@@ -2,7 +2,7 @@
 // 方針：ネット優先。つながるときは毎回最新のファイルを取りに行き（更新がすぐ反映される）、
 //       取れたファイルを保存しておく。つながらないときだけ、保存しておいたファイルを使う。
 // バージョンを上げたら CACHE の名前もそろえて変える（古い保存データを消すため）。
-const CACHE = 'tip-top-tower-v0.19.0';
+const CACHE = 'tip-top-tower-v0.19.1';
 const ASSETS = [
   './',
   './index.html',
@@ -20,7 +20,8 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      // このゲームの古い保存データだけ消す（同じサイトの他のアプリの分は残す）
+      .then(keys => Promise.all(keys.filter(k => k.startsWith('tip-top-tower-') && k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -31,10 +32,14 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(req)
       .then(res => {
-        if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
+        // 保存の書き込みが終わるまでワーカーを止めない。容量不足などで失敗してもゲームは続ける
+        if (res.ok) { const copy = res.clone(); e.waitUntil(caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {})); }
         return res;
       })
-      // ?v=0.19.0 のような付け足しは無視して、保存しておいたファイルを探す
-      .catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./index.html')))
+      // ?v=0.19.1 のような付け足しは無視して、保存しておいたファイルを探す。
+      // 見つからないとき、ページを開くときだけゲーム本体を返す。それ以外は「オフライン」と答える
+      .catch(() => caches.match(req, { ignoreSearch: true })
+        .then(r => r || (req.mode === 'navigate' ? caches.match('./index.html') : undefined))
+        .then(r => r || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })))
   );
 });

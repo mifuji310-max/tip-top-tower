@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.23.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.23.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.23.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=1.0.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.0">
+<link rel="manifest" href="manifest.webmanifest?v=1.0.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -17,7 +17,7 @@ html,body{margin:0;min-height:100%;background:#12162b;color:var(--ink);font-fami
 body{background:radial-gradient(ellipse at 50% -15%,#354477 0%,#181e3f 44%,#11152b 100%)}
 .wrap{max-width:460px;margin:auto;padding:14px 14px max(20px,env(safe-area-inset-bottom))}
 header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
-.eyebrow{font-size:10px;letter-spacing:.22em;color:#a6cff9;font-weight:900;margin-bottom:3px}
+.eyebrow{font-size:10px;letter-spacing:.22em;color:#a6cff9;font-weight:900;margin-bottom:3px}#ver{all:unset;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}#logPanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}.loglist{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;text-align:left;margin:6px 0 0;padding:0;list-style:none}.loglist::-webkit-scrollbar{display:none}.loglist li{padding:7px 4px;border-bottom:1px solid #ffffff1a;font-size:12.5px;line-height:1.5}.loglist b{color:#ffd34d;margin-right:6px}.loglist small{color:#9fb0d4;margin-left:4px}.loglink{all:unset;cursor:pointer;display:block;margin:14px 0 4px;color:#a6cff9;text-decoration:underline;font-size:12px}
 h1{font-size:clamp(23px,6.4vw,31px);font-weight:1000;letter-spacing:.01em;margin:0;line-height:1.1}
 h1 em{font-style:normal;color:#ffe9aa}.chip3d{display:inline-block;vertical-align:middle;margin-left:8px;transform:translateY(-2px);border:1px solid #9ce9eb73;background:#20aeb12b;color:#99f6ee;border-radius:8px;padding:4px 6px;font-size:12px;letter-spacing:.04em}
 .best{text-align:center;min-width:104px;border:1px solid #6a79a1;border-radius:15px;padding:7px 12px;background:#222b4ed6;box-shadow:0 7px 15px #05091838}
@@ -88,7 +88,7 @@ button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .rules p{font-size:12px!important;line-height:1.75!important;margin:0 0 4px!important;color:#dce6fa}
 .krow{display:flex;align-items:center;gap:9px;font-size:12px;line-height:1.5;color:#dce6fa;margin:6px 0}.krow svg{width:24px;height:24px;flex:none}.krow b{color:#fff}
 /* ステージ選択：ステージを「タワー」として下から積み上げる */
-#stagePanel:not([hidden]),#rankPanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}.subrow .sub{padding-left:4px;padding-right:4px}.rtabs{display:flex;gap:6px;margin:6px 0 8px;flex:none}.rtabs button,.rtabs select{flex:1;min-width:0;background:#101f3f;color:#dce6fa;border:1px solid #536c97;border-radius:0;padding:7px 4px;font:inherit;font-size:12px;font-weight:900}.rtabs .on{background:#ffd34d;color:#2a2440;border-color:#ffd34d}.rlist{flex:1;min-height:0;overflow-y:auto;list-style:none;margin:0;padding:0;text-align:left;scrollbar-width:none}.rlist::-webkit-scrollbar{display:none}.rlist li{display:flex;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px solid #ffffff1a;font-size:14px;font-weight:800}.rlist .rk{width:2.4em;flex:none;color:#ffd34d;text-align:right}.rlist .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rlist .vl{flex:none}.rlist li.me{background:#ffd34d26}.rlist li.info{justify-content:center;color:#b9c7e6;border:0;padding:18px 4px;font-weight:700}#nameInput{width:100%;box-sizing:border-box;font:inherit;font-size:18px;font-weight:800;padding:10px;margin:4px 0 2px;border:1.5px solid #ffffff8c;border-radius:0;background:#101b38;color:#fff;text-align:center}#rankMsg{margin:6px 0 0!important}.phead #rankTitle{height:auto;width:calc(100% - 60px);max-height:26px}#stagePanel .stower{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}#stagePanel .stower::-webkit-scrollbar{display:none}
+#stagePanel:not([hidden]),#rankPanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}.subrow .sub{padding-left:4px;padding-right:4px}.rtabs{display:flex;gap:6px;margin:6px 0 8px;flex:none}.rtabs button,.rtabs select{flex:1;min-width:0;background:#101f3f;color:#dce6fa;border:1px solid #536c97;border-radius:0;padding:7px 4px;font:inherit;font-size:12px;font-weight:900}.rtabs .on{background:#ffd34d;color:#2a2440;border-color:#ffd34d}.rlist{flex:1;min-height:0;overflow-y:auto;list-style:none;margin:0;padding:0;text-align:left;scrollbar-width:none}.rlist::-webkit-scrollbar{display:none}.rlist li{display:flex;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px solid #ffffff1a;font-size:14px;font-weight:800}.rlist .rk{width:2.4em;flex:none;color:#ffd34d;text-align:right}.rlist .nm small{display:block;font-size:10px;font-weight:700;color:#9fb0d4;letter-spacing:.02em}.rlist .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rlist .vl{flex:none}.rlist li.me{background:#ffd34d26}.rlist li.info{justify-content:center;color:#b9c7e6;border:0;padding:18px 4px;font-weight:700}#nameInput{width:100%;box-sizing:border-box;font:inherit;font-size:18px;font-weight:800;padding:10px;margin:4px 0 2px;border:1.5px solid #ffffff8c;border-radius:0;background:#101b38;color:#fff;text-align:center}#rankMsg{margin:6px 0 0!important}.phead #rankTitle,.phead #logTitle{height:auto;width:calc(100% - 60px);max-height:26px}#stagePanel .stower{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}#stagePanel .stower::-webkit-scrollbar{display:none}
 .phead{display:flex;align-items:center;gap:12px;margin-bottom:4px;flex:none}.phead .btitle{margin:0;height:26px}.sub.mini{width:auto;flex:none;margin:6px 0 0;padding:4px 12px;font-size:16px;--d:4px}
 .stower{display:flex;flex-direction:column-reverse;gap:11px;margin:6px 0 2px;padding:6px 8px 0 0}
 .sitem{display:flex;align-items:center;gap:10px;width:90%;text-align:left;padding:5px 10px;background:var(--face);color:#22203a;font-size:14px;font-weight:1000;--d:7px;animation:slabDrop .5s cubic-bezier(.3,1.4,.55,1) backwards}
@@ -129,7 +129,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </head>
 <body>
 <main class="wrap">
-  <header><div><div class="eyebrow">MINI GAME 01 · <span id="ver"></span></div><h1>Tip Top <em>Tower</em></h1></div><div class="best"><small id="lblBest">BEST SCORE</small><strong id="best">0</strong></div></header>
+  <header><div><div class="eyebrow">MINI GAME 01 · <button type="button" id="ver" aria-label="更新履歴を見る"></button></div><h1>Tip Top <em>Tower</em></h1></div><div class="best"><small id="lblBest">BEST SCORE</small><strong id="best">0</strong></div></header>
   <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
   <section class="stage" id="stage" aria-label="3Dブロック積みゲーム">
     <canvas id="game" width="720" height="1000" aria-label="画面タップで移動中の3Dブロックを落とす" tabindex="0"></canvas>
@@ -145,6 +145,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
       <div class="panel" id="endPanel" hidden><svg class="btitle" id="endBadge" role="img"></svg><h2 id="endTitle">ゲーム終了</h2><div class="stars-big" id="endStars" hidden></div><p id="endText">もう一度挑戦してみよう</p><div class="result"><div><small id="lblFScore">SCORE</small><strong id="finalScore">0</strong></div><div><small id="lblFHeight">高さ</small><strong id="finalHeight">0</strong></div><div><small id="lblFPeople">住人</small><strong id="finalResidents">0</strong></div></div><button class="primary" id="nextBtn" hidden aria-label="次のステージ"></button><button class="primary" id="againBtn" aria-label="もう一度"></button><button class="sub" id="rankSend" hidden aria-label="ランキングに登録"></button><p class="psub" id="rankMsg" hidden></p><div class="subrow"><button class="sub" id="viewBtn" aria-label="タワーを見る"></button><button class="sub" id="badgeBtnEnd" aria-label="バッジ"></button></div><button class="sub" id="menuBtn" aria-label="メニューへ"></button></div>
       <div class="panel" id="rankPanel" hidden><div class="phead"><button class="sub mini" id="rankBack" aria-label="もどる">←</button><svg class="btitle" id="rankTitle" role="img" aria-label="RANKING"></svg></div><div class="rtabs"><button id="rtScore">スコア</button><button id="rtHeight">高さ</button><select id="rtStage" aria-label="ステージを選ぶ"></select></div><ol class="rlist" id="rankList"></ol><p class="psub" id="rankMe"></p></div>
       <div class="panel" id="namePanel" hidden><svg class="btitle" id="nameTitle" role="img" aria-label="NAME"></svg><p>ランキングにのせる名前<br>（ニックネーム・10文字まで）</p><input id="nameInput" maxlength="10" autocomplete="off" enterkeyhint="done" aria-label="ニックネーム"><p class="psub" id="nameMsg">本名など、だれか分かる名前はさけてね</p><button class="primary" id="nameOk" aria-label="けってい"></button><button class="sub" id="nameCancel" aria-label="やめる"></button></div>
+      <div class="panel" id="logPanel" hidden><div class="phead"><button class="sub mini" id="logBack" aria-label="もどる">←</button><svg class="btitle" id="logTitle" role="img" aria-label="UPDATES"></svg></div><ul class="loglist" id="logList"></ul></div>
       <div class="panel" id="rulesPanel" hidden><div class="phead"><button class="sub mini" id="rulesBack" aria-label="もどる">←</button><svg class="btitle" id="rulesTitle" role="img" aria-label="RULES"></svg></div><div class="rules" id="rulesBody"></div></div>
       <div class="panel" id="badgePanel" hidden><svg class="btitle" id="badgeTitle" role="img" aria-label="BADGES"></svg><p class="psub" id="badgeCount"></p><div class="bgrid" id="badgeGrid"></div><button class="sub" id="badgeBack" aria-label="もどる"></button></div>
     </div>
@@ -155,7 +156,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.23.0';
+const VERSION='v1.0.0';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -384,7 +385,7 @@ const remaining=()=>Math.max(0,Math.min(MAX_TIME-elapsed,RUN_CAP-totalPlayed));
 const isHurry=()=>!isStage()&&state==='playing'&&remaining()<HURRY;
 // オーバーレイに出すパネルを1つだけにする（null なら全部隠す）
 let menuShownAt=0;
-function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel,el.rules,$('rankPanel'),$('namePanel')])q.hidden=q!==p;el.overlay.hidden=!p}
+function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel,el.rules,$('rankPanel'),$('namePanel'),$('logPanel')])q.hidden=q!==p;el.overlay.hidden=!p}
 const meters=()=>(stack.length-1)*FLOOR_M;
 // R10：値が変わったときだけ書き換える
 const setV=(e,v)=>{v=String(v);if(e._v!==v){e._v=v;e.textContent=v}};
@@ -533,35 +534,67 @@ function drawQuote(key){let bag=quoteBags[key];if(!bag||!bag.length){bag=quoteBa
 function pickQuote(reason,h){const left=isStage()?goalFloors(stageIdx)-h:99;
  const key=reason==='trip'&&Math.random()<.6?'trip':left<=5?'near':!isStage()&&bestHeight>0&&h>=bestHeight-3?'best':h<=5?'early':h>=30?'high':'mid';
  return drawQuote(Math.random()<.5?key:'any')}
+// ===== 更新履歴（遊ぶ人向けに短く。くわしい開発の記録は まとめ.md） =====
+const CHANGELOG=[
+ ['v1.0.0','2026-10-21','正式版！ランキングは名前を決めたあと自動で登録、1人10件まで載る。登録した日時とバージョンを表示。この更新履歴のページを追加'],
+ ['v0.23.0','','全体ランキング（エンドレスのスコア・高さ、ステージごとのスコア）'],
+ ['v0.22.0','','第3章 アジア編（ステージ21〜30）と、新しい仕掛け「夜」'],
+ ['v0.21','','第2章 日本編（ステージ11〜20）と、新しい仕掛け「霧」。章が進むほど少し速く。半透明のブロックのちらつきを直した'],
+ ['v0.20','','第1章にステージ6〜10。ゲームオーバーに励ましの言葉（129個）。メッセージや点数を見やすい位置に'],
+ ['v0.19','','オフラインでも起動できるように。ルールにスコアの説明。ミニブロックに白い枠'],
+ ['v0.18','','ロケットの★の数え方と雷の破片を直した。バッジを5つ追加'],
+ ['v0.17','','ルール説明のページ。ロケットは＋2段に。特殊ブロックの色を整理'],
+ ['v0.16','','新しい特殊ブロック（ロケット・磁石・ワープ・おばけ・雷・ミニ）'],
+ ['v0.15','','色のテーマが全部で20種類に'],
+ ['v0.14.1','2026-10-20','インターネットで公開スタート'],
+ ['v0.10〜0.14','','名前が「Tip Top Tower」に。ブロック文字のロゴ。タワーの形のステージ選択'],
+ ['v0.9','','エンドレスとステージの2つのモード'],
+ ['v0.5〜0.8','','実在の建物との比べっこ、住人、お守り、空と雲、風、バッジ'],
+ ['v0.1〜0.4','2026-10-18','2Dの試作から3Dへ']];
+let logFrom=null;
+function openLog(from){logFrom=from||el.start;showPanel($('logPanel'));blockText($('logTitle'),'UPDATES');const ul=$('logList');ul.innerHTML='';
+ for(const [v,d,t] of CHANGELOG){const li=document.createElement('li'),b=document.createElement('b');b.textContent=v;li.appendChild(b);
+  if(d){const sm=document.createElement('small');sm.textContent=d;li.appendChild(sm);li.appendChild(document.createElement('br'))}li.appendChild(document.createTextNode(t));ul.appendChild(li)}}
 // ===== ランキング（全体ランキング。v0.23.0） =====
 // 記録は Firebase の Realtime Database に、ゲームから直接（ライブラリなしで）送る。
-// 1回の登録＝1件を追加するだけ（上書き・削除はできないルール）。表示するときに、同じ人（p＝端末ごとのID）の一番いい記録だけ残す。
+// 1回の登録＝1件を追加するだけ（上書き・削除はできないルール）。
+// 同じ人も何件でも載る（v1.0.0〜）。送るのは「その人の記録の上位10件」に入ったときだけ。表示も1人10件まで（p＝端末ごとのID）。
+// 名前を決めるまでは結果画面の「RANK IN!」で。名前を決めたあとは、上位10件に入るたびに自動で送る。
+// 記録の中身：n＝名前、s＝記録、p＝端末ID、t＝登録日時（サーバーの時刻）、v＝そのときのバージョン（v1.0.0から）
 // ボード：score（エンドレスのスコア）／height（エンドレスの高さ・段）／st1〜st30（各ステージのスコア、クリアしたときだけ）
 // 注意：点数はゲームの中で計算しているので、詳しい人ならごまかして送れる（友達同士で遊ぶ前提）。データベース側で、名前の長さや点数の範囲だけ確かめる
 const RANK_DB='https://tip-top-tower-default-rtdb.asia-southeast1.firebasedatabase.app';// FirebaseのデータベースのURL（例：https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app）。空のあいだはランキングは「準備中」
 const RANK_PATH='/ttt/v1/',NG_WORDS=['しね','死ね','ころす','殺す','ばか','バカ','うざ','きもい','キモ','fuck','shit','sex'];
 let rankPid=read('ttt.pid','');if(!rankPid){rankPid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);write('ttt.pid',rankPid)}
-let rankName=read('ttt.name',''),rankSent={},rankPending=[],rankBoardNow='score',nameThen=null;try{rankSent=JSON.parse(read('ttt.sent','{}'))||{}}catch{}
+const RANK_KEEP=10;// 1人が載せられる件数（ボードごと）
+// rankMine：ボードごとに、自分が送った記録の上位10件（大きい順）。v0.23.0 の「一番いい記録1つ」の形からも読みかえる
+let rankName=read('ttt.name',''),rankMine={},rankPending=[],rankBoardNow='score',nameThen=null;
+try{const o=JSON.parse(read('ttt.sent','{}'))||{};for(const k in o)rankMine[k]=(Array.isArray(o[k])?o[k]:[o[k]]).filter(n=>typeof n==='number')}catch{}
+const rankQualifies=(board,v)=>{const l=rankMine[board]||[];return v>0&&(l.length<RANK_KEEP||v>l[l.length-1])};
+function rankRemember(board,v){const l=(rankMine[board]||[]).concat(v).sort((a,b)=>b-a).slice(0,RANK_KEEP);rankMine[board]=l;write('ttt.sent',JSON.stringify(rankMine))}
 const boardLabel=b=>b==='score'?'エンドレス・スコア':b==='height'?'エンドレス・高さ':'ステージ'+b.slice(2)+' '+(STAGES[+b.slice(2)-1]||{}).name;
 const boardValue=(b,v)=>b==='height'?(v*FLOOR_M)+'m':v+'点';
-// 結果画面：送れる記録（自分が前に送った記録より良いもの）があればボタンを出す
+// 登録した日時（今年なら 月/日 時:分、去年より前は 年/月/日）
+function rankWhen(t){if(!t)return '';const d=new Date(t),now=new Date(),p2=n=>String(n).padStart(2,'0');return (d.getFullYear()!==now.getFullYear()?d.getFullYear()+'/':'')+(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+p2(d.getMinutes())}
+// 結果画面：自分の上位10件に入る記録があれば、名前があれば自動で送る。名前がまだなら「RANK IN!」ボタン
 function rankOffer(clear,h){rankPending=[];
- if(!isStage()){if(score>(rankSent.score||0))rankPending.push(['score',score]);if(h>(rankSent.height||0))rankPending.push(['height',h])}
- else if(clear&&score>(rankSent['st'+(stageIdx+1)]||0))rankPending.push(['st'+(stageIdx+1),score]);
- const b=$('rankSend'),m=$('rankMsg');b.hidden=!RANK_DB||!rankPending.length;b.disabled=false;m.hidden=true;setText(b,'RANK IN!',['#eaf1ff'])}
+ if(!isStage()){if(rankQualifies('score',score))rankPending.push(['score',score]);if(rankQualifies('height',h))rankPending.push(['height',h])}
+ else if(clear&&rankQualifies('st'+(stageIdx+1),score))rankPending.push(['st'+(stageIdx+1),score]);
+ const b=$('rankSend'),m=$('rankMsg');b.disabled=false;m.hidden=true;setText(b,'RANK IN!',['#eaf1ff']);
+ if(!RANK_DB||!rankPending.length){b.hidden=true;return}
+ if(rankName){b.hidden=true;rankSubmit()}else b.hidden=false}
 async function rankSubmit(){if(!rankPending.length)return;if(!rankName){openName(el.end,rankSubmit);return}
- const b=$('rankSend'),m=$('rankMsg');b.disabled=true;m.hidden=false;m.textContent='送信中…';
- try{let first=null;for(const [board,v] of rankPending){
-   const r=await fetch(RANK_DB+RANK_PATH+board+'.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:rankName,s:v,p:rankPid,t:{'.sv':'timestamp'}})});
-   if(!r.ok)throw new Error('HTTP '+r.status);rankSent[board]=v;if(!first)first=board}
-  write('ttt.sent',JSON.stringify(rankSent));rankPending=[];
-  const list=await rankFetch(first),i=list.findIndex(e=>e.p===rankPid);
-  m.textContent=boardLabel(first)+'：'+(i>=0?(i+1)+'位！':'100位より下…次こそ！');b.hidden=true;beep('charm')}
- catch(e){m.textContent='送れませんでした。電波のいい所でもう一度';b.disabled=false}}
-// ボードの上位を読む（同じ人は一番いい記録だけ）
-async function rankFetch(board){const r=await fetch(RANK_DB+RANK_PATH+board+'.json?orderBy=%22s%22&limitToLast=100');if(!r.ok)throw new Error('HTTP '+r.status);
- const all=Object.values(await r.json()||{}).filter(e=>e&&typeof e.s==='number').sort((a,b)=>b.s-a.s||(a.t||0)-(b.t||0)),seen=new Set(),out=[];
- for(const e of all){if(seen.has(e.p))continue;seen.add(e.p);out.push(e)}return out.slice(0,50)}
+ const b=$('rankSend'),m=$('rankMsg'),sending=rankPending;rankPending=[];b.disabled=true;m.hidden=false;m.textContent='ランキングに登録中…';
+ try{const done=[];for(const [board,v] of sending){
+   const r=await fetch(RANK_DB+RANK_PATH+board+'.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:rankName,s:v,p:rankPid,t:{'.sv':'timestamp'},v:VERSION})});
+   if(!r.ok)throw new Error('HTTP '+r.status);rankRemember(board,v);done.push([board,v])}
+  const parts=[];for(const [board,v] of done){const list=await rankFetch(board),i=list.findIndex(e=>e.p===rankPid&&e.s===v);parts.push(boardLabel(board)+' '+(i>=0?(i+1)+'位':'50位より下'))}
+  m.textContent='ランキング登録：'+parts.join(' ／ ');b.hidden=true;beep('charm')}
+ catch(e){rankPending=sending;m.textContent='送れませんでした。電波のいい所で、もう一度ボタンを';b.hidden=false;b.disabled=false}}
+// ボードの上位を読む（同じ人は10件まで、全部で50件）
+async function rankFetch(board){const r=await fetch(RANK_DB+RANK_PATH+board+'.json?orderBy=%22s%22&limitToLast=300');if(!r.ok)throw new Error('HTTP '+r.status);
+ const all=Object.values(await r.json()||{}).filter(e=>e&&typeof e.s==='number').sort((a,b)=>b.s-a.s||(a.t||0)-(b.t||0)),cnt={},out=[];
+ for(const e of all){cnt[e.p]=(cnt[e.p]||0)+1;if(cnt[e.p]>RANK_KEEP)continue;out.push(e);if(out.length>=50)break}return out}
 function openRanking(){showPanel($('rankPanel'));blockText($('rankTitle'),'RANKING');const sel=$('rtStage');
  sel.innerHTML='<option value="">ステージ…</option>'+STAGES.map((st,i)=>'<option value="st'+(i+1)+'">'+(i+1)+' '+st.name+'</option>').join('');showBoard(rankBoardNow)}
 async function showBoard(board){rankBoardNow=board;$('rtScore').classList.toggle('on',board==='score');$('rtHeight').classList.toggle('on',board==='height');
@@ -571,7 +604,8 @@ async function showBoard(board){rankBoardNow=board;$('rtScore').classList.toggle
  if(!RANK_DB){info('ランキングは準備中です');return}
  info('読みこみ中…');try{const list=await rankFetch(board);if(rankBoardNow!==board)return;if(!list.length){info('まだだれも登録していません。一番乗りしよう！');return}
   ol.innerHTML='';list.forEach((e,i)=>{const li=document.createElement('li');if(e.p===rankPid)li.className='me';
-   for(const [c,t] of [['rk',(i+1)+'位'],['nm',e.n],['vl',boardValue(board,e.s)]]){const sp=document.createElement('span');sp.className=c;sp.textContent=t;li.appendChild(sp)}ol.appendChild(li)})}
+   for(const [c,t] of [['rk',(i+1)+'位'],['nm',e.n],['vl',boardValue(board,e.s)]]){const sp=document.createElement('span');sp.className=c;sp.textContent=t;
+    if(c==='nm'){const sm=document.createElement('small');sm.textContent=rankWhen(e.t)+(e.v?'  '+e.v:'');sp.appendChild(sm)}li.appendChild(sp)}ol.appendChild(li)})}
  catch(e){info('つながりませんでした。電波のいい所でもう一度')}}
 // 名前を決める画面（決めたあとに then を実行）
 function openName(back,then){nameThen=then||null;showPanel($('namePanel'));blockText($('nameTitle'),'NAME');$('namePanel').dataset.back=back===el.end?'end':'rank';
@@ -807,7 +841,8 @@ function openRules(){showPanel(el.rules);blockText($('rulesTitle'),'RULES');cons
  +'<h3>風</h3><p>10段ごとに風がふく。白い線と同じ向きに動くと速く、逆だと遅い。</p>'
  +'<h3>夜（第3章から）</h3><p>動くブロックが暗くなり、光るふちだけが見える。てっぺんのピンクの枠に合わせよう。ネオンがときどき消えるステージもある。</p>'
  +'<h3>霧（第2章から）</h3><p>画面の端と上がかすんで、ブロックが見えにくくなる。タワーの上はいつも晴れている。</p>'
- +'<h3>特殊ブロック</h3>'+KIND_INFO.map(([k,n,t])=>'<div class="krow">'+kindIcon(k)+'<span><b>'+n+'</b>：'+t+'</span></div>').join('')}
+ +'<h3>特殊ブロック</h3>'+KIND_INFO.map(([k,n,t])=>'<div class="krow">'+kindIcon(k)+'<span><b>'+n+'</b>：'+t+'</span></div>').join('')
+ +'<button type="button" class="loglink" id="logLink">更新履歴を見る（'+VERSION+'）</button>';$('logLink').addEventListener('click',()=>openLog(el.rules))}
 // 固定のボタン・ラベルをブロック文字に（日本語の小さい説明はモード選択だけ残す）
 setText($('startBtn'),'ENDLESS',['#2a2440'],{sub:'60秒の記録チャレンジ'});setText($('stageBtn'),'STAGE',['#2a2440'],{sub:'建物の高さまで積めばクリア'});
 setText($('badgeBtnStart'),'BADGES',['#eaf1ff']);setText($('rulesBtn'),'RULES',['#eaf1ff']);setText($('rankBtn'),'RANKING',['#eaf1ff']);setText($('nameOk'),'OK',['#2a2440']);setText($('nameCancel'),'BACK',['#eaf1ff']);setText($('introStart'),'START',['#2a2440']);setText($('introBack'),'BACK',['#eaf1ff']);setText($('badgeBack'),'BACK',['#eaf1ff']);
@@ -826,7 +861,9 @@ $('nextBtn').addEventListener('click',()=>{reset(true);openIntro(stageIdx+1)});
 $('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);if(wasStage)openStages()});// レビュー①：メニュー中（ready）は RESTART を無視する
 $('restart').addEventListener('click',()=>{if(state==='ready')return;reset(false)});$('viewBtn').addEventListener('click',viewTower);
 $('badgeBtnStart').addEventListener('click',()=>openBadges(el.start));$('badgeBtnEnd').addEventListener('click',()=>openBadges(el.end));$('badgeBack').addEventListener('click',closeBadges);
-$('rulesBtn').addEventListener('click',openRules);$('rankBtn').addEventListener('click',openRanking);$('rankBack').addEventListener('click',()=>showPanel(el.start));
+$('rulesBtn').addEventListener('click',openRules);$('rankBtn').addEventListener('click',openRanking);
+// 更新履歴：ヘッダーのバージョンをタップ（遊んでいる最中は開かない）
+$('ver').addEventListener('click',()=>{if(state==='playing'||el.overlay.hidden)return;const cur=[el.start,el.end,el.rules].find(q=>!q.hidden);openLog(cur)});$('logBack').addEventListener('click',()=>showPanel(logFrom||el.start));$('rankBack').addEventListener('click',()=>showPanel(el.start));
 $('rtScore').addEventListener('click',()=>showBoard('score'));$('rtHeight').addEventListener('click',()=>showBoard('height'));$('rtStage').addEventListener('change',e=>{if(e.target.value)showBoard(e.target.value)});
 $('rankMe').addEventListener('click',()=>openName($('rankPanel')));$('rankSend').addEventListener('click',rankSubmit);
 $('nameOk').addEventListener('click',()=>closeName(true));$('nameCancel').addEventListener('click',()=>closeName(false));$('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();closeName(true)}e.stopPropagation()});$('rulesBack').addEventListener('click',()=>showPanel(el.start));

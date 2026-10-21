@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.22.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.22.0">
-<link rel="manifest" href="manifest.webmanifest?v=0.22.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.23.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.23.0">
+<link rel="manifest" href="manifest.webmanifest?v=0.23.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -88,7 +88,7 @@ button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .rules p{font-size:12px!important;line-height:1.75!important;margin:0 0 4px!important;color:#dce6fa}
 .krow{display:flex;align-items:center;gap:9px;font-size:12px;line-height:1.5;color:#dce6fa;margin:6px 0}.krow svg{width:24px;height:24px;flex:none}.krow b{color:#fff}
 /* ステージ選択：ステージを「タワー」として下から積み上げる */
-#stagePanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}#stagePanel .stower{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}#stagePanel .stower::-webkit-scrollbar{display:none}
+#stagePanel:not([hidden]),#rankPanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}.subrow .sub{padding-left:4px;padding-right:4px}.rtabs{display:flex;gap:6px;margin:6px 0 8px;flex:none}.rtabs button,.rtabs select{flex:1;min-width:0;background:#101f3f;color:#dce6fa;border:1px solid #536c97;border-radius:0;padding:7px 4px;font:inherit;font-size:12px;font-weight:900}.rtabs .on{background:#ffd34d;color:#2a2440;border-color:#ffd34d}.rlist{flex:1;min-height:0;overflow-y:auto;list-style:none;margin:0;padding:0;text-align:left;scrollbar-width:none}.rlist::-webkit-scrollbar{display:none}.rlist li{display:flex;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px solid #ffffff1a;font-size:14px;font-weight:800}.rlist .rk{width:2.4em;flex:none;color:#ffd34d;text-align:right}.rlist .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rlist .vl{flex:none}.rlist li.me{background:#ffd34d26}.rlist li.info{justify-content:center;color:#b9c7e6;border:0;padding:18px 4px;font-weight:700}#nameInput{width:100%;box-sizing:border-box;font:inherit;font-size:18px;font-weight:800;padding:10px;margin:4px 0 2px;border:1.5px solid #ffffff8c;border-radius:0;background:#101b38;color:#fff;text-align:center}#rankMsg{margin:6px 0 0!important}.phead #rankTitle{height:auto;width:calc(100% - 60px);max-height:26px}#stagePanel .stower{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}#stagePanel .stower::-webkit-scrollbar{display:none}
 .phead{display:flex;align-items:center;gap:12px;margin-bottom:4px;flex:none}.phead .btitle{margin:0;height:26px}.sub.mini{width:auto;flex:none;margin:6px 0 0;padding:4px 12px;font-size:16px;--d:4px}
 .stower{display:flex;flex-direction:column-reverse;gap:11px;margin:6px 0 2px;padding:6px 8px 0 0}
 .sitem{display:flex;align-items:center;gap:10px;width:90%;text-align:left;padding:5px 10px;background:var(--face);color:#22203a;font-size:14px;font-weight:1000;--d:7px;animation:slabDrop .5s cubic-bezier(.3,1.4,.55,1) backwards}
@@ -139,10 +139,12 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
     <div class="effect" id="effect" aria-live="polite"><span id="effect-title"></span><small id="effect-detail"></small></div>
     <div class="bottom-hint" id="bottomHint">TAP TO STACK</div>
     <div class="overlay" id="overlay">
-      <div class="panel" id="startPanel"><svg class="logo" id="logo" role="img" aria-label="Tip Top Tower"></svg><p class="tagline">ブロックを積んで、空のてっぺんへ。</p><button class="primary" id="startBtn" aria-label="エンドレス"></button><button class="primary alt" id="stageBtn" aria-label="ステージ"></button><div class="subrow"><button class="sub" id="badgeBtnStart" aria-label="バッジ"></button><button class="sub" id="rulesBtn" aria-label="ルール"></button></div></div>
+      <div class="panel" id="startPanel"><svg class="logo" id="logo" role="img" aria-label="Tip Top Tower"></svg><p class="tagline">ブロックを積んで、空のてっぺんへ。</p><button class="primary" id="startBtn" aria-label="エンドレス"></button><button class="primary alt" id="stageBtn" aria-label="ステージ"></button><div class="subrow"><button class="sub" id="badgeBtnStart" aria-label="バッジ"></button><button class="sub" id="rankBtn" aria-label="ランキング"></button><button class="sub" id="rulesBtn" aria-label="ルール"></button></div></div>
       <div class="panel" id="stagePanel" hidden><div class="phead"><button class="sub mini" id="stageBack" aria-label="もどる">←</button><svg class="btitle" id="stageTitle" role="img" aria-label="STAGE"></svg></div><p class="psub">下から順にクリアしよう</p><div class="stower" id="stageList"></div></div>
       <div class="panel" id="introPanel" hidden><svg class="btitle" id="introBadge" role="img"></svg><h2 id="introTitle"></h2><p id="introText"></p><p class="psub" id="introStars"></p><button class="primary" id="introStart" aria-label="スタート"></button><button class="sub" id="introBack" aria-label="もどる"></button></div>
-      <div class="panel" id="endPanel" hidden><svg class="btitle" id="endBadge" role="img"></svg><h2 id="endTitle">ゲーム終了</h2><div class="stars-big" id="endStars" hidden></div><p id="endText">もう一度挑戦してみよう</p><div class="result"><div><small id="lblFScore">SCORE</small><strong id="finalScore">0</strong></div><div><small id="lblFHeight">高さ</small><strong id="finalHeight">0</strong></div><div><small id="lblFPeople">住人</small><strong id="finalResidents">0</strong></div></div><button class="primary" id="nextBtn" hidden aria-label="次のステージ"></button><button class="primary" id="againBtn" aria-label="もう一度"></button><div class="subrow"><button class="sub" id="viewBtn" aria-label="タワーを見る"></button><button class="sub" id="badgeBtnEnd" aria-label="バッジ"></button></div><button class="sub" id="menuBtn" aria-label="メニューへ"></button></div>
+      <div class="panel" id="endPanel" hidden><svg class="btitle" id="endBadge" role="img"></svg><h2 id="endTitle">ゲーム終了</h2><div class="stars-big" id="endStars" hidden></div><p id="endText">もう一度挑戦してみよう</p><div class="result"><div><small id="lblFScore">SCORE</small><strong id="finalScore">0</strong></div><div><small id="lblFHeight">高さ</small><strong id="finalHeight">0</strong></div><div><small id="lblFPeople">住人</small><strong id="finalResidents">0</strong></div></div><button class="primary" id="nextBtn" hidden aria-label="次のステージ"></button><button class="primary" id="againBtn" aria-label="もう一度"></button><button class="sub" id="rankSend" hidden aria-label="ランキングに登録"></button><p class="psub" id="rankMsg" hidden></p><div class="subrow"><button class="sub" id="viewBtn" aria-label="タワーを見る"></button><button class="sub" id="badgeBtnEnd" aria-label="バッジ"></button></div><button class="sub" id="menuBtn" aria-label="メニューへ"></button></div>
+      <div class="panel" id="rankPanel" hidden><div class="phead"><button class="sub mini" id="rankBack" aria-label="もどる">←</button><svg class="btitle" id="rankTitle" role="img" aria-label="RANKING"></svg></div><div class="rtabs"><button id="rtScore">スコア</button><button id="rtHeight">高さ</button><select id="rtStage" aria-label="ステージを選ぶ"></select></div><ol class="rlist" id="rankList"></ol><p class="psub" id="rankMe"></p></div>
+      <div class="panel" id="namePanel" hidden><svg class="btitle" id="nameTitle" role="img" aria-label="NAME"></svg><p>ランキングにのせる名前<br>（ニックネーム・10文字まで）</p><input id="nameInput" maxlength="10" autocomplete="off" enterkeyhint="done" aria-label="ニックネーム"><p class="psub" id="nameMsg">本名など、だれか分かる名前はさけてね</p><button class="primary" id="nameOk" aria-label="けってい"></button><button class="sub" id="nameCancel" aria-label="やめる"></button></div>
       <div class="panel" id="rulesPanel" hidden><div class="phead"><button class="sub mini" id="rulesBack" aria-label="もどる">←</button><svg class="btitle" id="rulesTitle" role="img" aria-label="RULES"></svg></div><div class="rules" id="rulesBody"></div></div>
       <div class="panel" id="badgePanel" hidden><svg class="btitle" id="badgeTitle" role="img" aria-label="BADGES"></svg><p class="psub" id="badgeCount"></p><div class="bgrid" id="badgeGrid"></div><button class="sub" id="badgeBack" aria-label="もどる"></button></div>
     </div>
@@ -153,7 +155,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.22.0';
+const VERSION='v0.23.0';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -382,7 +384,7 @@ const remaining=()=>Math.max(0,Math.min(MAX_TIME-elapsed,RUN_CAP-totalPlayed));
 const isHurry=()=>!isStage()&&state==='playing'&&remaining()<HURRY;
 // オーバーレイに出すパネルを1つだけにする（null なら全部隠す）
 let menuShownAt=0;
-function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel,el.rules])q.hidden=q!==p;el.overlay.hidden=!p}
+function showPanel(p){if(p)menuShownAt=performance.now();el.stage.classList.toggle('title',p===el.start);for(const q of [el.start,el.end,el.stagePanel,el.intro,el.badgePanel,el.rules,$('rankPanel'),$('namePanel')])q.hidden=q!==p;el.overlay.hidden=!p}
 const meters=()=>(stack.length-1)*FLOOR_M;
 // R10：値が変わったときだけ書き換える
 const setV=(e,v)=>{v=String(v);if(e._v!==v){e._v=v;e.textContent=v}};
@@ -531,6 +533,54 @@ function drawQuote(key){let bag=quoteBags[key];if(!bag||!bag.length){bag=quoteBa
 function pickQuote(reason,h){const left=isStage()?goalFloors(stageIdx)-h:99;
  const key=reason==='trip'&&Math.random()<.6?'trip':left<=5?'near':!isStage()&&bestHeight>0&&h>=bestHeight-3?'best':h<=5?'early':h>=30?'high':'mid';
  return drawQuote(Math.random()<.5?key:'any')}
+// ===== ランキング（全体ランキング。v0.23.0） =====
+// 記録は Firebase の Realtime Database に、ゲームから直接（ライブラリなしで）送る。
+// 1回の登録＝1件を追加するだけ（上書き・削除はできないルール）。表示するときに、同じ人（p＝端末ごとのID）の一番いい記録だけ残す。
+// ボード：score（エンドレスのスコア）／height（エンドレスの高さ・段）／st1〜st30（各ステージのスコア、クリアしたときだけ）
+// 注意：点数はゲームの中で計算しているので、詳しい人ならごまかして送れる（友達同士で遊ぶ前提）。データベース側で、名前の長さや点数の範囲だけ確かめる
+const RANK_DB='https://tip-top-tower-default-rtdb.asia-southeast1.firebasedatabase.app';// FirebaseのデータベースのURL（例：https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app）。空のあいだはランキングは「準備中」
+const RANK_PATH='/ttt/v1/',NG_WORDS=['しね','死ね','ころす','殺す','ばか','バカ','うざ','きもい','キモ','fuck','shit','sex'];
+let rankPid=read('ttt.pid','');if(!rankPid){rankPid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);write('ttt.pid',rankPid)}
+let rankName=read('ttt.name',''),rankSent={},rankPending=[],rankBoardNow='score',nameThen=null;try{rankSent=JSON.parse(read('ttt.sent','{}'))||{}}catch{}
+const boardLabel=b=>b==='score'?'エンドレス・スコア':b==='height'?'エンドレス・高さ':'ステージ'+b.slice(2)+' '+(STAGES[+b.slice(2)-1]||{}).name;
+const boardValue=(b,v)=>b==='height'?(v*FLOOR_M)+'m':v+'点';
+// 結果画面：送れる記録（自分が前に送った記録より良いもの）があればボタンを出す
+function rankOffer(clear,h){rankPending=[];
+ if(!isStage()){if(score>(rankSent.score||0))rankPending.push(['score',score]);if(h>(rankSent.height||0))rankPending.push(['height',h])}
+ else if(clear&&score>(rankSent['st'+(stageIdx+1)]||0))rankPending.push(['st'+(stageIdx+1),score]);
+ const b=$('rankSend'),m=$('rankMsg');b.hidden=!RANK_DB||!rankPending.length;b.disabled=false;m.hidden=true;setText(b,'RANK IN!',['#eaf1ff'])}
+async function rankSubmit(){if(!rankPending.length)return;if(!rankName){openName(el.end,rankSubmit);return}
+ const b=$('rankSend'),m=$('rankMsg');b.disabled=true;m.hidden=false;m.textContent='送信中…';
+ try{let first=null;for(const [board,v] of rankPending){
+   const r=await fetch(RANK_DB+RANK_PATH+board+'.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:rankName,s:v,p:rankPid,t:{'.sv':'timestamp'}})});
+   if(!r.ok)throw new Error('HTTP '+r.status);rankSent[board]=v;if(!first)first=board}
+  write('ttt.sent',JSON.stringify(rankSent));rankPending=[];
+  const list=await rankFetch(first),i=list.findIndex(e=>e.p===rankPid);
+  m.textContent=boardLabel(first)+'：'+(i>=0?(i+1)+'位！':'100位より下…次こそ！');b.hidden=true;beep('charm')}
+ catch(e){m.textContent='送れませんでした。電波のいい所でもう一度';b.disabled=false}}
+// ボードの上位を読む（同じ人は一番いい記録だけ）
+async function rankFetch(board){const r=await fetch(RANK_DB+RANK_PATH+board+'.json?orderBy=%22s%22&limitToLast=100');if(!r.ok)throw new Error('HTTP '+r.status);
+ const all=Object.values(await r.json()||{}).filter(e=>e&&typeof e.s==='number').sort((a,b)=>b.s-a.s||(a.t||0)-(b.t||0)),seen=new Set(),out=[];
+ for(const e of all){if(seen.has(e.p))continue;seen.add(e.p);out.push(e)}return out.slice(0,50)}
+function openRanking(){showPanel($('rankPanel'));blockText($('rankTitle'),'RANKING');const sel=$('rtStage');
+ sel.innerHTML='<option value="">ステージ…</option>'+STAGES.map((st,i)=>'<option value="st'+(i+1)+'">'+(i+1)+' '+st.name+'</option>').join('');showBoard(rankBoardNow)}
+async function showBoard(board){rankBoardNow=board;$('rtScore').classList.toggle('on',board==='score');$('rtHeight').classList.toggle('on',board==='height');
+ const sel=$('rtStage');sel.classList.toggle('on',board.startsWith('st'));sel.value=board.startsWith('st')?board:'';
+ const ol=$('rankList'),info=t=>{ol.innerHTML='';const li=document.createElement('li');li.className='info';li.textContent=t;ol.appendChild(li)};
+ $('rankMe').textContent=(rankName?'あなたの名前：'+rankName+'（タップで変更）':'名前はまだ決めていません（タップで決める）');
+ if(!RANK_DB){info('ランキングは準備中です');return}
+ info('読みこみ中…');try{const list=await rankFetch(board);if(rankBoardNow!==board)return;if(!list.length){info('まだだれも登録していません。一番乗りしよう！');return}
+  ol.innerHTML='';list.forEach((e,i)=>{const li=document.createElement('li');if(e.p===rankPid)li.className='me';
+   for(const [c,t] of [['rk',(i+1)+'位'],['nm',e.n],['vl',boardValue(board,e.s)]]){const sp=document.createElement('span');sp.className=c;sp.textContent=t;li.appendChild(sp)}ol.appendChild(li)})}
+ catch(e){info('つながりませんでした。電波のいい所でもう一度')}}
+// 名前を決める画面（決めたあとに then を実行）
+function openName(back,then){nameThen=then||null;showPanel($('namePanel'));blockText($('nameTitle'),'NAME');$('namePanel').dataset.back=back===el.end?'end':'rank';
+ const inp=$('nameInput');inp.value=rankName;$('nameMsg').textContent='本名など、だれか分かる名前はさけてね';setTimeout(()=>inp.focus(),50)}
+function closeName(ok){const back=$('namePanel').dataset.back==='end'?el.end:$('rankPanel');
+ if(ok){const v=$('nameInput').value.trim().replace(/\s+/g,' ');if(!v){$('nameMsg').textContent='名前を入れてね';return}
+  if(NG_WORDS.some(w=>v.toLowerCase().includes(w))){$('nameMsg').textContent='その名前は使えません。ほかの名前にしてね';return}
+  rankName=v.slice(0,10);write('ttt.name',rankName)}
+ showPanel(back);if(back!==el.end)showBoard(rankBoardNow);const t=nameThen;nameThen=null;if(ok&&t)t()}
 function finish(reason){if(state==='over')return;
  const h=stack.length-1,st=STAGES[stageIdx],clear=reason==='clear';if(!isStage()&&totalPlayed>=RUN_CAP&&missCount===0)award('full');// R02：お守りで助かったミスもミスとして数える
  state='over';moving=null;setFog(false);
@@ -552,6 +602,7 @@ function finish(reason){if(state==='over')return;
  const hasNext=isStage()&&clear&&stageIdx<STAGES.length-1;$('nextBtn').hidden=!hasNext;$('againBtn').className=hasNext?'sub':'primary';
  setText($('menuBtn'),isStage()?'STAGES':'MENU',['#eaf1ff']);
  setText($('badgeBtnEnd'),got.length?'BADGES +'+got.length:'BADGES',['#eaf1ff']);
+ rankOffer(clear,h);
  $('finalScore').textContent=score;$('finalHeight').textContent=h*FLOOR_M+'m';$('finalResidents').textContent=residents+'人';showPanel(el.end);setText(el.hint,'TRY AGAIN',['#eef9ff'],{flat:1});updateHud()}
 function scaleNotes(n){const f=SCALE[Math.min(n,SCALE.length)-1];
  // 8連続（ド）以降は「ドミソ」の和音でごほうび感を出す
@@ -759,7 +810,7 @@ function openRules(){showPanel(el.rules);blockText($('rulesTitle'),'RULES');cons
  +'<h3>特殊ブロック</h3>'+KIND_INFO.map(([k,n,t])=>'<div class="krow">'+kindIcon(k)+'<span><b>'+n+'</b>：'+t+'</span></div>').join('')}
 // 固定のボタン・ラベルをブロック文字に（日本語の小さい説明はモード選択だけ残す）
 setText($('startBtn'),'ENDLESS',['#2a2440'],{sub:'60秒の記録チャレンジ'});setText($('stageBtn'),'STAGE',['#2a2440'],{sub:'建物の高さまで積めばクリア'});
-setText($('badgeBtnStart'),'BADGES',['#eaf1ff']);setText($('rulesBtn'),'RULES',['#eaf1ff']);setText($('introStart'),'START',['#2a2440']);setText($('introBack'),'BACK',['#eaf1ff']);setText($('badgeBack'),'BACK',['#eaf1ff']);
+setText($('badgeBtnStart'),'BADGES',['#eaf1ff']);setText($('rulesBtn'),'RULES',['#eaf1ff']);setText($('rankBtn'),'RANKING',['#eaf1ff']);setText($('nameOk'),'OK',['#2a2440']);setText($('nameCancel'),'BACK',['#eaf1ff']);setText($('introStart'),'START',['#2a2440']);setText($('introBack'),'BACK',['#eaf1ff']);setText($('badgeBack'),'BACK',['#eaf1ff']);
 setText($('nextBtn'),'NEXT STAGE',['#2a2440']);setText($('againBtn'),'RETRY',['#2a2440']);setText($('viewBtn'),'VIEW',['#eaf1ff']);setText($('badgeBtnEnd'),'BADGES',['#eaf1ff']);setText($('menuBtn'),'MENU',['#eaf1ff']);
 setText($('restart'),'RESTART',['#eaf1ff']);setText($('rotate'),'CAMERA',['#eaf1ff']);
 setText($('lblBest'),'BEST SCORE',['#becae2'],{flat:1});setText($('lblHeight'),'HEIGHT',['#becae2'],{flat:1});setText($('lblScore'),'SCORE',['#becae2'],{flat:1});setText($('lblCombo'),'COMBO',['#becae2'],{flat:1});
@@ -775,12 +826,15 @@ $('nextBtn').addEventListener('click',()=>{reset(true);openIntro(stageIdx+1)});
 $('menuBtn').addEventListener('click',()=>{const wasStage=isStage();reset(true);if(wasStage)openStages()});// レビュー①：メニュー中（ready）は RESTART を無視する
 $('restart').addEventListener('click',()=>{if(state==='ready')return;reset(false)});$('viewBtn').addEventListener('click',viewTower);
 $('badgeBtnStart').addEventListener('click',()=>openBadges(el.start));$('badgeBtnEnd').addEventListener('click',()=>openBadges(el.end));$('badgeBack').addEventListener('click',closeBadges);
-$('rulesBtn').addEventListener('click',openRules);$('rulesBack').addEventListener('click',()=>showPanel(el.start));
+$('rulesBtn').addEventListener('click',openRules);$('rankBtn').addEventListener('click',openRanking);$('rankBack').addEventListener('click',()=>showPanel(el.start));
+$('rtScore').addEventListener('click',()=>showBoard('score'));$('rtHeight').addEventListener('click',()=>showBoard('height'));$('rtStage').addEventListener('change',e=>{if(e.target.value)showBoard(e.target.value)});
+$('rankMe').addEventListener('click',()=>openName($('rankPanel')));$('rankSend').addEventListener('click',rankSubmit);
+$('nameOk').addEventListener('click',()=>closeName(true));$('nameCancel').addEventListener('click',()=>closeName(false));$('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();closeName(true)}e.stopPropagation()});$('rulesBack').addEventListener('click',()=>showPanel(el.start));
 $('rotate').addEventListener('click',()=>{angleChoice=(angleChoice+1)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice]);menuShownAt=performance.now()/* R01 */});
 $('sound').addEventListener('click',()=>{soundOn=!soundOn;write('pittariTower3D.sound',soundOn?'on':'off');setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));if(soundOn)beep('land')});
 cv.addEventListener('pointerdown',e=>{e.preventDefault();if(viewing)closeView();else place()},{passive:false});
 // レビュー⑥：キーボード操作（R＝やり直し、C／←→＝視点変更、Space／Enter＝置く・スタート）
-document.addEventListener('keydown',e=>{if(e.code==='KeyR'&&state!=='ready'){reset(false);return}if(e.code==='ArrowLeft'){angleChoice=(angleChoice+3)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice]);menuShownAt=performance.now();return}/* レビュー2回目-4：←は逆回り */if(e.code==='KeyC'||e.code==='ArrowRight'){$('rotate').click();return}if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
+document.addEventListener('keydown',e=>{if(e.target&&/^(INPUT|SELECT)$/.test(e.target.tagName))return;/* 名前入力・ステージ選びの最中はゲームのキーを使わない */if(e.code==='KeyR'&&state!=='ready'){reset(false);return}if(e.code==='ArrowLeft'){angleChoice=(angleChoice+3)%4;if(!viewing)camAzTarget=nearAngle(ANGLES[angleChoice]);menuShownAt=performance.now();return}/* レビュー2回目-4：←は逆回り */if(e.code==='KeyC'||e.code==='ArrowRight'){$('rotate').click();return}if(e.code==='Space'||e.code==='Enter'){if(e.target&&e.target.tagName==='BUTTON')return;e.preventDefault();if(viewing)closeView();else if(state==='playing')place();else if(state==='ready'){if(!el.intro.hidden)startGame('stage',stageIdx);else if(!el.start.hidden)startGame('endless')}else if(state==='over'&&!el.end.hidden)reset(false)}});
 document.addEventListener('visibilitychange',()=>{last=0});setText(el.sound,soundOn?'SOUND ON':'SOUND OFF',['#eaf1ff']);el.sound.setAttribute('aria-pressed',String(soundOn));reset(true);requestAnimationFrame(tick);
 })();
 </script>

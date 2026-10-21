@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.21.3">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.21.3">
-<link rel="manifest" href="manifest.webmanifest?v=0.21.3">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=0.22.0">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=0.22.0">
+<link rel="manifest" href="manifest.webmanifest?v=0.22.0">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -153,7 +153,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v0.21.3';
+const VERSION='v0.22.0';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -235,7 +235,8 @@ window.addEventListener('resize',()=>{fit();if(typeof menuShownAt!=='undefined')
 const H=.68,MAX_TIME=60,TIME_CAP=80,RUN_CAP=180,BASE=4.6,MARGIN=5.6;
 const HURRY=10,FLOOR_M=10,CAM_DIST=17.8,CAM_LIFT=11.8,ANGLES=[.55,1.55,2.55,-.55],MAX_CHARMS=3;
 // 1段＝10mとして比べる実在の建物（高さm, 名前）
-const LANDMARKS=[[15,'奈良の大仏'],[93,'自由の女神'],[108,'神戸ポートタワー'],[120,'牛久大仏'],[131,'京都タワー'],[147,'さっぽろテレビ塔'],[173,'梅田スカイビル'],[180,'MIRAI TOWER'],[243,'東京都庁'],[245,'JRセントラルタワーズ'],[256,'咲洲庁舎'],[296,'横浜ランドマークタワー'],[192,'ゲートウェイ・アーチ'],[227,'ゴールデンゲート・ブリッジ'],[234,'福岡タワー'],[300,'あべのハルカス'],[319,'クライスラー・ビル'],[325,'麻布台ヒルズ'],[333,'東京タワー'],[338,'マカオタワー'],[350,'ザ・ストラット'],[634,'東京スカイツリー'],[828,'ブルジュ・ハリファ'],[3776,'富士山']];
+// 建物超えの一覧（高さ順に並べ替えて使う。「次：」の表示と「○○超え！」の判定が高さ順を前提にしているため）
+const LANDMARKS=[[15,'奈良の大仏'],[93,'自由の女神'],[108,'神戸ポートタワー'],[120,'牛久大仏'],[131,'京都タワー'],[147,'さっぽろテレビ塔'],[173,'梅田スカイビル'],[180,'MIRAI TOWER'],[243,'東京都庁'],[245,'JRセントラルタワーズ'],[256,'咲洲庁舎'],[296,'横浜ランドマークタワー'],[192,'ゲートウェイ・アーチ'],[227,'ゴールデンゲート・ブリッジ'],[234,'福岡タワー'],[300,'あべのハルカス'],[319,'クライスラー・ビル'],[325,'麻布台ヒルズ'],[333,'東京タワー'],[338,'マカオタワー'],[350,'ザ・ストラット'],[634,'東京スカイツリー'],[828,'ブルジュ・ハリファ'],[3776,'富士山'],[73,'クトゥブ・ミナール'],[132,'モナス'],[194,'マリーナベイ・サンズ'],[236,'Nソウルタワー'],[262,'ビテクスコ・タワー'],[304,'バイヨーク・タワーII'],[314,'マハナコン'],[346,'ザ・センター'],[348,'高雄85ビル'],[367,'中国銀行タワー']].sort((a,b)=>a[0]-b[0]);
 // 連続PERFECTで鳴らすドレミファソラシド
 const SCALE=[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5];
 // 特殊ブロック：色（alt と交互に光る）・まわりに出る粒の色
@@ -293,7 +294,18 @@ const STAGES=[
  {name:'JRセントラルタワーズ',m:245,kinds:['gold','grow','magnet','warp','ghost'],wind:true,fog:2,intro:'濃い霧の中のおばけとワープ\n見えない時間をどう読むか'},
  {name:'大阪府咲洲庁舎',m:256,kinds:['gold','ice','grow','magnet','thunder','mini'],wind:true,fog:2,intro:'霧の中の雷とミニ\nあわてず、真ん中で止めよう'},
  {name:'横浜ランドマークタワー',m:296,kinds:['gold','ice','grow','magnet','warp','ghost','thunder','mini'],wind:true,fog:3,intro:'港をおおう深い霧\n全部の特殊ブロックが出てくる'},
- {name:'麻布台ヒルズ 森JPタワー',m:325,kinds:['gold','ice','grow','magnet','warp','ghost','thunder','mini'],wind:true,fog:3,intro:'第2章のしめくくり！\n日本一高いビルへ。深い霧の中、お守りをためて進もう'}];
+ {name:'麻布台ヒルズ 森JPタワー',m:325,kinds:['gold','ice','grow','magnet','warp','ghost','thunder','mini'],wind:true,fog:3,intro:'第2章のしめくくり！\n日本一高いビルへ。深い霧の中、お守りをためて進もう'},
+ // 第3章 アジア編（v0.22.0）：新しい仕掛けは「夜」（night：1＝ネオンがずっと光る、2＝ときどき消える、3＝よく消える）
+ {name:'クトゥブ・ミナール',m:73,kinds:['gold','ice','grow','magnet'],wind:false,night:0,intro:'第3章 アジア編へようこそ！\n色はサイバーとダーク。まずは低い塔で肩ならし'},
+ {name:'モナス（独立記念塔）',m:132,kinds:['gold','ice','grow','magnet'],wind:false,night:1,intro:'新登場：夜\n動くブロックは暗くて、光るふちだけが見える。\nタワーのてっぺんの光る枠に合わせよう'},
+ {name:'マリーナベイ・サンズ',m:194,kinds:['gold','ice','grow','warp'],wind:true,night:1,intro:'夜のワープ\n光るふちを目で追いかけよう'},
+ {name:'Nソウルタワー',m:236,kinds:['gold','grow','magnet','ghost'],wind:true,night:1,intro:'夜のおばけ\n消えている間は、ふちも消える'},
+ {name:'ビテクスコ・タワー',m:262,kinds:['gold','ice','grow','magnet','thunder'],wind:true,night:2,intro:'ネオンがチカチカ\n光るふちが、ときどき消える。\n消える前に、どこにいるか覚えておこう'},
+ {name:'バイヨーク・タワーII',m:304,kinds:['gold','ice','grow','warp','mini'],wind:true,night:2,intro:'チカチカの中のミニ\n白い枠も、ネオンと一緒に消える'},
+ {name:'キングパワー・マハナコン',m:314,kinds:['gold','grow','magnet','warp','ghost'],wind:true,night:2,intro:'おばけとネオン\n見えない時間が長くなる'},
+ {name:'ザ・センター',m:346,kinds:['gold','ice','grow','magnet','thunder','mini'],wind:true,night:2,intro:'雷とミニ\n暗い中でも、あわてず真ん中で'},
+ {name:'高雄85ビル',m:348,kinds:['gold','ice','grow','magnet','warp','ghost','thunder','mini'],wind:true,night:3,intro:'ネオンが切れかけ…\n光るふちが消える時間がもっと長い。全部の特殊ブロックが出る'},
+ {name:'中国銀行タワー',m:367,kinds:['gold','ice','grow','magnet','warp','ghost','thunder','mini'],wind:true,night:3,intro:'第3章のしめくくり！\n香港の夜空へ。光が消えても、リズムを信じて'}];
 // 章：10ステージで1章。章ごとに色のテーマを決める（まとめ.md の章立て）
 // 第1章は単調にならないよう、ほかの章に割り当てていないテーマを順番に使う（ステージ1はパステル）。第10章は全部のテーマ（下の式でばらばらに）
 const CHAPTER_NAMES=['はじまり','日本編','アジア編','ヨーロッパ編','アメリカ編','中東・アフリカ編','海と空の章','嵐の章','ミッションの章','最終章'];
@@ -410,7 +422,14 @@ function reset(preview=false){state=preview?'ready':'playing';setFog(!preview);m
 // はっきり見えるのは真ん中から FOG_CLEAR の距離まで（うすい3.4／ふつう2.8／こい2.2。端までは6.6）。そこから1.6かけて薄くなり、
 // 端では完全に消える（FOG_MIN＝0）。画面の白い層は雰囲気だけ
 let fogLevel=0;const FOG_CLEAR=[99,3.4,2.8,2.2],FOG_MIN=[1,0,0,0],FOG_COLOR='#eef0f6';
-function setFog(on){fogLevel=on&&isStage()?(STAGES[stageIdx].fog||0):0;$('fog').style.opacity=[0,.45,.6,.75][fogLevel]}
+function setFog(on){fogLevel=on&&isStage()?(STAGES[stageIdx].fog||0):0;$('fog').style.opacity=[0,.45,.6,.75][fogLevel];
+ nightLevel=on&&isStage()?(STAGES[stageIdx].night||0):0;skyShown=-1e9}// 夜も同じところで切りかえる
+// 夜（ステージの night：0〜3）。動くブロックは暗く、光るふち（ネオン）でだけ見える。2・3はネオンがときどき消える
+let nightLevel=0;const NIGHT_SKY=['#04061a','#0a0f2e','#131a46','#1c1440'],NEON='#5ff4ff',NEON_TOP='#ff5ad8';
+function neonOn(){if(nightLevel<2||!moving)return true;if(moving.ph===undefined)moving.ph=Math.random()*2;const per=nightLevel===2?1.15:.95,off=nightLevel===2?.3:.48;return (clock+moving.ph)%per>off}
+// 光るふち：細い角材12本で箱のふちを作る（WebGLの線は1ピクセルで細すぎるため）
+function neonEdges(x,y,z,w,h,d,c,t,onlyTop){const y1=y+h/2,y0=y-h/2;for(const yy of onlyTop?[y1]:[y0,y1]){box(x,yy,z-d/2,w+t,t,t,c,1,false);box(x,yy,z+d/2,w+t,t,t,c,1,false);box(x-w/2,yy,z,t,t,d,c,1,false);box(x+w/2,yy,z,t,t,d,c,1,false)}
+ if(!onlyTop)for(const sx of [-1,1])for(const sz of [-1,1])box(x+sx*w/2,y,z+sz*d/2,t,h,t,c,1,false)}
 function fogVis(){if(!fogLevel||!moving)return 1;const d=Math.abs(moving[moving.axis]-stack[stack.length-1][moving.axis]);return Math.max(FOG_MIN[fogLevel],Math.min(1,1-(d-FOG_CLEAR[fogLevel])/1.6))}
 function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
 // ステージ選択：★の数と、まだ遊べないステージは🔒
@@ -422,15 +441,17 @@ function openStages(){showPanel(el.stagePanel);blockText($('stageTitle'),'STAGE'
   const b=document.createElement('button');b.className='sitem';b.disabled=!ok;b.style.cssText='--face:'+col+';--top:'+mixHex(col,'#ffffff',.5)+';--side:'+mixHex(col,'#1c2747',.3)+';margin-left:'+SLAB_OFFSETS[i%SLAB_OFFSETS.length]+'px;animation-delay:'+(i*.09)+'s';
   b.innerHTML='<svg class="num"></svg><span>'+(ok?s.name:'？？？')+'<small>'+s.m+'m・'+goalFloors(i)+'段</small></span><span class="stars">'+(ok?(n?'★'.repeat(n)+'☆'.repeat(3-n):'NEW'):'🔒')+'</span>';
   blockText(b.querySelector('.num'),String(i+1),[ok?'#ffffff':'#8d97b8']);b.addEventListener('click',()=>openIntro(i));list.appendChild(b)});
- // てっぺんに「つづき」を予告（次は第3章 アジア編）
- const g=document.createElement('div');g.className='sitem ghost';g.style.marginLeft=SLAB_OFFSETS[5]+'px';g.innerHTML='<span>つづきは近日公開…<small>第3章 アジア編 ／ めざせ ブルジュ・ハリファ 828m</small></span>';list.appendChild(g);
+ // てっぺんに「つづき」を予告（次は第4章 ヨーロッパ編）
+ const g=document.createElement('div');g.className='sitem ghost';g.style.marginLeft=SLAB_OFFSETS[5]+'px';g.innerHTML='<span>つづきは近日公開…<small>第4章 ヨーロッパ編 ／ めざせ ブルジュ・ハリファ 828m</small></span>';list.appendChild(g);
  // ステージが増えたので、いま遊べる一番上のステージが真ん中に来るようにスクロールする
  const cur=list.querySelectorAll('button.sitem')[STAGES.reduce((k,_,i)=>unlocked(i)?i:k,0)];list.scrollTop=cur.offsetTop-list.offsetTop-list.clientHeight/2+cur.offsetHeight/2}
 // ステージ紹介：遊ぶ前に、新しく出る仕掛けを1つだけ説明する（プレイ中は読む余裕がないため）
 function openIntro(i){stageIdx=i;showPanel(el.intro);blockText($('introBadge'),'STAGE '+(i+1));$('introTitle').textContent=STAGES[i].name+'（'+STAGES[i].m+'m）';
  $('introText').textContent=STAGES[i].intro;$('introStars').textContent='デザイン：'+themeForStage(i).name+'　／　★3：PERFECT 70%以上'}
 // 空の色を高さ(m)に合わせて塗り替える（0.5m以上変わったときだけ）
-function applySky(m){if(Math.abs(m-skyShown)<.5)return;skyShown=m;let i=0;while(i<SKY.length-2&&m>SKY[i+1][0])i++;
+function applySky(m){if(Math.abs(m-skyShown)<.5)return;skyShown=m;
+ if(nightLevel){el.stage.style.background='linear-gradient(165deg,'+NIGHT_SKY.join(',')+')';el.stage.style.setProperty('--stars','1');return}// 夜の空
+ let i=0;while(i<SKY.length-2&&m>SKY[i+1][0])i++;
  const [m0,c0,s0]=SKY[i],[m1,c1,s1]=SKY[i+1],t=Math.max(0,Math.min(1,(m-m0)/(m1-m0))),c=c0.map((v,k)=>mixHex(v,c1[k],t));
  el.stage.style.background='linear-gradient(165deg,'+c[0]+' 0%,'+c[1]+' 43%,'+c[2]+' 78%,'+c[3]+' 100%)';el.stage.style.setProperty('--stars',(s0+(s1-s0)*t).toFixed(2))}
 // 自動回転で何周もした後でも、近い向きへ戻す
@@ -605,6 +626,7 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  // Floating island & base pedestal, both genuine 3D cuboids.
  if(camY<8||viewing){box(0,-.55,0,8.6,.60,8.6,'#3c416e',1);box(0,-.20,0,8.15,.14,8.15,'#747fb5',1);box(0,-.11,0,5.75,.16,5.75,'#a5bce4',1)}
  for(const b of stack){if(b.appear&&clock<b.appear)continue;if(!viewing&&b.y<camY-16)continue;/* レビュー③：画面より下の階は描かない */box(b.x,b.y,b.z,b.w,H,b.d,b.color);if(b.born!==undefined&&(viewing||b.y>camY-13))windows(b,eye)}
+ if(nightLevel&&!viewing){const t=stack[stack.length-1];neonEdges(t.x,t.y,t.z,t.w,H,t.d,NEON_TOP,.05,true)}// 夜：てっぺんの光る枠
  // 雲：てっぺんより下にだけ出す（動くブロックを隠さないように）。積むほど雲を突き抜けていく
  const topY=stack[stack.length-1].y;
  for(const c of CLOUDS){if(c.y>topY-.5||(!viewing&&Math.abs(c.y-camY)>14))continue;const a=c.a+clock*.04,x=Math.cos(a)*c.r,z=Math.sin(a)*c.r,s=c.s;
@@ -616,12 +638,13 @@ function render(){faces.length=0;edges.length=0;facesT.length=0;edgesT.length=0;
  // 動くブロック：特殊ブロックは光る。ステージで1往復の残りが少ないと赤く点滅
  if(moving&&!(moving.appear>clock)){const k=KINDS[moving.kind];let col=k?mixHex(k.color,k.alt,(Math.sin(clock*(moving.kind==='thunder'?28:10))+1)/2):moving.color;
   const danger=isStage()&&state==='playing'?Math.max(0,(moving.trip/tripLimit()-.62)/.38):0;if(danger>0)col=mixHex(col,'#ff3355',Math.min(1,danger*1.3)*(.55+.45*Math.sin(clock*(14+danger*16))));
-  const fv=fogVis();if(fv<1)col=mixHex(col,FOG_COLOR,(1-fv)*.6);// 霧：真ん中から離れるほど白くかすんで消える
-  const ga=(moving.kind==='ghost'?ghostAlpha():1)*fv;if(ga>.02){const a=moving.kind==='ghost'?.8*ga:ga>.98?1:ga;if(a<1)box(moving.x,moving.y+.015,moving.z,moving.w,H-.03,moving.d,col,a);else box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,1)}
+  const fv=fogVis();if(fv<1)col=mixHex(col,FOG_COLOR,(1-fv)*.6);const non=neonOn();if(nightLevel)col=mixHex(col,'#0a0d22',.86);// 霧：真ん中から離れるほど白くかすんで消える
+  const ga=(moving.kind==='ghost'?ghostAlpha():1)*fv;if(ga>.02)if(nightLevel&&non&&ga>.5)neonEdges(moving.x,moving.y,moving.z,moving.w,H,moving.d,KINDS[moving.kind]?KINDS[moving.kind].color:NEON,.07);
+  {const a=moving.kind==='ghost'?.8*ga:ga>.98?1:ga;if(a<1)box(moving.x,moving.y+.015,moving.z,moving.w,H-.03,moving.d,col,a);else box(moving.x,moving.y,moving.z,moving.w,H,moving.d,col,1)}
   // ミニ：PERFECTで戻る「元の大きさ」を白い枠で見せる。この枠を下の段にぴったり重ねるつもりでタップすればよい
-  if(moving.kind==='mini'){const pv=stack[stack.length-1];box(moving.x,moving.y,moving.z,pv.w,H*.96,pv.d,'#ffffff',.26+.1*Math.sin(clock*6))}
+  if(moving.kind==='mini'&&non){const pv=stack[stack.length-1];box(moving.x,moving.y,moving.z,pv.w,H*.96,pv.d,'#ffffff',.26+.1*Math.sin(clock*6))}
   // 特殊ブロックの上面に、白いドット絵のマーク
-  const mk=KIND_MARKS[moving.kind];if(mk&&ga>.02){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.045;/* 上の面とぴったり重ならないよう少し浮かせる（ちらつき対策） */
+  const mk=KIND_MARKS[moving.kind];if(mk&&ga>.02&&non){const c=Math.min(moving.w,moving.d)*.13,y=moving.y+H/2+.045;/* 上の面とぴったり重ならないよう少し浮かせる（ちらつき対策） */
    mk.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')box(moving.x+(k-2)*c,y,moving.z+(r-2)*c,c*.92,.07,c*.92,(KINDS[moving.kind].mark||'#ffffff'),ga,false)}))}}
  // お守り：持っている数だけ、動くブロックより上でピンクのキューブが小さく回る
  if(charms>0&&!viewing){const top=stack[stack.length-1];for(let i=0;i<charms;i++){const a=clock*1.8+i*Math.PI*2/charms;box(Math.cos(a)*1.6,top.y+H*4.2+Math.sin(clock*3+i)*.12,Math.sin(a)*1.6,.34,.34,.34,'#ff8fd0',1)}}
@@ -731,6 +754,7 @@ function openRules(){showPanel(el.rules);blockText($('rulesTitle'),'RULES');cons
  +'<h3>ENDLESS（エンドレス）</h3><p>60秒の記録チャレンジ。PERFECTで時間がのびる（最大3分）。</p>'
  +'<h3>STAGE（ステージ）</h3><p>建物の高さまで積めばクリア。ブロックは1往復するまでに置こう。2回目にタワーの上を通りすぎたら時間切れ（赤く光ったら急いで！）。★はPERFECTの多さで決まる。</p>'
  +'<h3>風</h3><p>10段ごとに風がふく。白い線と同じ向きに動くと速く、逆だと遅い。</p>'
+ +'<h3>夜（第3章から）</h3><p>動くブロックが暗くなり、光るふちだけが見える。てっぺんのピンクの枠に合わせよう。ネオンがときどき消えるステージもある。</p>'
  +'<h3>霧（第2章から）</h3><p>画面の端と上がかすんで、ブロックが見えにくくなる。タワーの上はいつも晴れている。</p>'
  +'<h3>特殊ブロック</h3>'+KIND_INFO.map(([k,n,t])=>'<div class="krow">'+kindIcon(k)+'<span><b>'+n+'</b>：'+t+'</span></div>').join('')}
 // 固定のボタン・ラベルをブロック文字に（日本語の小さい説明はモード選択だけ残す）

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=1.0.1">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.1">
-<link rel="manifest" href="manifest.webmanifest?v=1.0.1">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=1.0.2">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.2">
+<link rel="manifest" href="manifest.webmanifest?v=1.0.2">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -156,7 +156,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v1.0.1';
+const VERSION='v1.0.2';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -536,6 +536,7 @@ function pickQuote(reason,h){const left=isStage()?goalFloors(stageIdx)-h:99;
  return drawQuote(Math.random()<.5?key:'any')}
 // ===== 更新履歴（遊ぶ人向けに短く。くわしい開発の記録は まとめ.md） =====
 const CHANGELOG=[
+ ['v1.0.2','2026-10-22','ランキングは上位30位まで'],
  ['v1.0.1','2026-10-21','ランキングは上位10位まで。同じ人も何回でも入れる'],
  ['v1.0.0','2026-10-21','正式版！ランキングは名前を決めたあと自動で登録。登録した日時とバージョンを表示。この更新履歴のページを追加'],
  ['v0.23.0','','全体ランキング（エンドレスのスコア・高さ、ステージごとのスコア）'],
@@ -559,21 +560,21 @@ function openLog(from){logFrom=from||el.start;showPanel($('logPanel'));blockText
 // ===== ランキング（全体ランキング。v0.23.0） =====
 // 記録は Firebase の Realtime Database に、ゲームから直接（ライブラリなしで）送る。
 // 1回の登録＝1件を追加するだけ（上書き・削除はできないルール）。
-// kyushu-shooter と同じ考え方（v1.0.1〜）：ランキングは上位10位まで、同じ人も何回でも並ぶ。
-// 送るのは「いまの上位10位に入る記録」のときだけ。名前を決めるまでは結果画面の「RANK IN!」で、決めたあとは自動で送る。
+// kyushu-shooter と同じ考え方（v1.0.1〜）：ランキングは上位30位まで（v1.0.2〜。v1.0.1は10位）、同じ人も何回でも並ぶ。
+// 送るのは「いまの上位30位に入る記録」のときだけ。名前を決めるまでは結果画面の「RANK IN!」で、決めたあとは自動で送る。
 // 記録の中身：n＝名前、s＝記録、p＝端末ID、t＝登録日時（サーバーの時刻）、v＝そのときのバージョン（v1.0.0から）
 // ボード：score（エンドレスのスコア）／height（エンドレスの高さ・段）／st1〜st30（各ステージのスコア、クリアしたときだけ）
 // 注意：点数はゲームの中で計算しているので、詳しい人ならごまかして送れる（友達同士で遊ぶ前提）。データベース側で、名前の長さや点数の範囲だけ確かめる
 const RANK_DB='https://tip-top-tower-default-rtdb.asia-southeast1.firebasedatabase.app';// FirebaseのデータベースのURL（例：https://xxxx-default-rtdb.asia-southeast1.firebasedatabase.app）。空のあいだはランキングは「準備中」
 const RANK_PATH='/ttt/v1/',NG_WORDS=['しね','死ね','ころす','殺す','ばか','バカ','うざ','きもい','キモ','fuck','shit','sex'];
 let rankPid=read('ttt.pid','');if(!rankPid){rankPid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);write('ttt.pid',rankPid)}
-const RANK_TOP=10;// ランキングに載る数（ボードごと）
+const RANK_TOP=30;// ランキングに載る数（ボードごと。v1.0.2で10→30）
 let rankName=read('ttt.name',''),rankPending=[],rankBoardNow='score',nameThen=null;
 const boardLabel=b=>b==='score'?'エンドレス・スコア':b==='height'?'エンドレス・高さ':'ステージ'+b.slice(2)+' '+(STAGES[+b.slice(2)-1]||{}).name;
 const boardValue=(b,v)=>b==='height'?(v*FLOOR_M)+'m':v+'点';
 // 登録した日時（今年なら 月/日 時:分、去年より前は 年/月/日）
 function rankWhen(t){if(!t)return '';const d=new Date(t),now=new Date(),p2=n=>String(n).padStart(2,'0');return (d.getFullYear()!==now.getFullYear()?d.getFullYear()+'/':'')+(d.getMonth()+1)+'/'+d.getDate()+' '+d.getHours()+':'+p2(d.getMinutes())}
-// 結果画面：いまの上位10位に入る記録があれば、名前があれば自動で送る。名前がまだなら「RANK IN!」ボタン
+// 結果画面：いまの上位30位に入る記録があれば、名前があれば自動で送る。名前がまだなら「RANK IN!」ボタン
 async function rankOffer(clear,h){rankPending=[];const b=$('rankSend'),m=$('rankMsg');b.hidden=true;b.disabled=false;m.hidden=true;setText(b,'RANK IN!',['#eaf1ff']);
  if(!RANK_DB)return;const cand=[];
  if(!isStage()){if(score>0)cand.push(['score',score]);if(h>0)cand.push(['height',h])}else if(clear)cand.push(['st'+(stageIdx+1),score]);
@@ -590,7 +591,7 @@ async function rankSubmit(){if(!rankPending.length)return;if(!rankName){openName
   const parts=[];for(const [board,v] of done){const list=await rankFetch(board),i=list.findIndex(e=>e.p===rankPid&&e.s===v);if(i>=0)parts.push(boardLabel(board)+' '+(i+1)+'位')}
   m.textContent=parts.length?'ランクイン！ '+parts.join(' ／ '):'ランキングに登録しました';b.hidden=true;beep('charm')}
  catch(e){rankPending=sending;m.textContent='送れませんでした。電波のいい所で、もう一度ボタンを';b.hidden=false;b.disabled=false}}
-// ボードの上位10件を読む（同じ人も何回でも並ぶ）
+// ボードの上位30件を読む（同じ人も何回でも並ぶ）
 async function rankFetch(board){const r=await fetch(RANK_DB+RANK_PATH+board+'.json?orderBy=%22s%22&limitToLast='+RANK_TOP);if(!r.ok)throw new Error('HTTP '+r.status);
  return Object.values(await r.json()||{}).filter(e=>e&&typeof e.s==='number').sort((a,b)=>b.s-a.s||(a.t||0)-(b.t||0)).slice(0,RANK_TOP)}
 function openRanking(){showPanel($('rankPanel'));blockText($('rankTitle'),'RANKING');const sel=$('rtStage');

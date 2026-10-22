@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=1.1.0">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.1.0">
-<link rel="manifest" href="manifest.webmanifest?v=1.1.0">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=1.1.1">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.1.1">
+<link rel="manifest" href="manifest.webmanifest?v=1.1.1">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -92,7 +92,7 @@ button{font:inherit;border:0;cursor:pointer;touch-action:manipulation}
 .phead{display:flex;align-items:center;gap:12px;margin-bottom:4px;flex:none}.phead .btitle{margin:0;height:26px}.sub.mini{width:auto;flex:none;margin:6px 0 0;padding:4px 12px;font-size:16px;--d:4px}
 .stower{display:flex;flex-direction:column-reverse;gap:11px;margin:6px 0 2px;padding:6px 8px 0 0}
 .sitem{display:flex;align-items:center;gap:10px;width:90%;text-align:left;padding:5px 10px;background:var(--face);color:#22203a;font-size:14px;font-weight:1000;--d:7px;animation:slabDrop .5s cubic-bezier(.3,1.4,.55,1) backwards}
-.chap{align-self:flex-start;font-size:11px;font-weight:900;letter-spacing:.12em;color:#b9c7e6;margin:6px 0 -4px 2px}
+.chap{align-self:flex-start;font-size:11px;font-weight:900;letter-spacing:.12em;color:#b9c7e6;margin:-2px 0 16px 2px}/* 見出しは自分の章（上）に寄せ、下の章の最後の段とはあける */
 .sitem small{display:block;font-size:10px;font-weight:800;opacity:.75}
 .sitem .num{height:20px;width:auto;flex:none;overflow:visible}
 .sitem .stars{margin-left:auto;font-size:13px;color:#7a5200;letter-spacing:1px;white-space:nowrap}
@@ -156,7 +156,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v1.1.0';
+const VERSION='v1.1.1';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -457,9 +457,11 @@ function startGame(m,i=0){mode=m;stageIdx=i;reset(false)}
 // ステージ選択：ステージ1を一番下に、タワーのように積み上げる。開くたびに下から落ちてきて積み上がる
 const SLAB_OFFSETS=[0,14,5,17,8,12];
 function openStages(){showPanel(el.stagePanel);blockText($('stageTitle'),'STAGE');const list=$('stageList');list.innerHTML='';
+ // 落ちてくる演出は、開いたときに見える所（いま遊べる一番上のステージのまわり）だけ。下の方はすぐ表示（ステージが増えて待ち時間が長くなっていたため）
+ const curI=STAGES.reduce((k,_,i)=>unlocked(i)?i:k,0),fromI=Math.max(0,curI-6);
  STAGES.forEach((s,i)=>{const ok=unlocked(i),n=stageStars[i],col=BLOCK_COLORS[(i+2)%BLOCK_COLORS.length];
   if(i%10===0){const c=document.createElement('div');c.className='chap';c.textContent='第'+(i/10+1)+'章 '+CHAPTER_NAMES[i/10];list.appendChild(c)}
-  const b=document.createElement('button');b.className='sitem';b.disabled=!ok;b.style.cssText='--face:'+col+';--top:'+mixHex(col,'#ffffff',.5)+';--side:'+mixHex(col,'#1c2747',.3)+';margin-left:'+SLAB_OFFSETS[i%SLAB_OFFSETS.length]+'px;animation-delay:'+(i*.09)+'s';
+  const b=document.createElement('button');b.className='sitem';b.disabled=!ok;b.style.cssText='--face:'+col+';--top:'+mixHex(col,'#ffffff',.5)+';--side:'+mixHex(col,'#1c2747',.3)+';margin-left:'+SLAB_OFFSETS[i%SLAB_OFFSETS.length]+'px;'+(i<fromI?'animation:none':'animation-delay:'+((i-fromI)*.06).toFixed(2)+'s');
   b.innerHTML='<svg class="num"></svg><span>'+(ok?s.name:'？？？')+'<small>'+s.m+'m・'+goalFloors(i)+'段</small></span><span class="stars">'+(ok?(n?'★'.repeat(n)+'☆'.repeat(3-n):'NEW'):'🔒')+'</span>';
   blockText(b.querySelector('.num'),String(i+1),[ok?'#ffffff':'#8d97b8']);b.addEventListener('click',()=>openIntro(i));list.appendChild(b)});
  // てっぺんに「つづき」を予告（次は第5章 アメリカ編）
@@ -554,6 +556,7 @@ function pickQuote(reason,h){const left=isStage()?goalFloors(stageIdx)-h:99;
  return drawQuote(Math.random()<.5?key:'any')}
 // ===== 更新履歴（遊ぶ人向けに短く。くわしい開発の記録は まとめ.md） =====
 const CHANGELOG=[
+ ['v1.1.1','2026-10-23','ステージ選択がすぐ出るように。章の見出しの位置を調整'],
  ['v1.1.0','2026-10-23','第4章 ヨーロッパ編（ステージ31〜40）と、新しい仕掛け「フェイント」'],
  ['v1.0.2','2026-10-22','ランキングは上位30位まで'],
  ['v1.0.1','2026-10-21','ランキングは上位10位まで。同じ人も何回でも入れる'],

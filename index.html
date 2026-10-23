@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#141932">
 <title>Tip Top Tower</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=1.1.1">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.1.1">
-<link rel="manifest" href="manifest.webmanifest?v=1.1.1">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=1.1.2">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.1.2">
+<link rel="manifest" href="manifest.webmanifest?v=1.1.2">
 <meta name="apple-mobile-web-app-title" content="Tip Top Tower">
 <meta name="description" content="ブロックを積んで、空のてっぺんへ。スマホで遊べる3Dブロック積みミニゲーム">
 <style>
@@ -19,7 +19,7 @@ body{background:radial-gradient(ellipse at 50% -15%,#354477 0%,#181e3f 44%,#1115
 header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
 .eyebrow{font-size:10px;letter-spacing:.22em;color:#a6cff9;font-weight:900;margin-bottom:3px}#ver{all:unset;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}#logPanel:not([hidden]){display:flex;flex-direction:column;overflow:hidden}.loglist{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;text-align:left;margin:6px 0 0;padding:0;list-style:none}.loglist::-webkit-scrollbar{display:none}.loglist li{padding:7px 4px;border-bottom:1px solid #ffffff1a;font-size:12.5px;line-height:1.5}.loglist b{color:#ffd34d;margin-right:6px}.loglist small{color:#9fb0d4;margin-left:4px}.loglink{all:unset;cursor:pointer;display:block;margin:14px 0 4px;color:#a6cff9;text-decoration:underline;font-size:12px}
 h1{font-size:clamp(23px,6.4vw,31px);font-weight:1000;letter-spacing:.01em;margin:0;line-height:1.1}
-h1 em{font-style:normal;color:#ffe9aa}.chip3d{display:inline-block;vertical-align:middle;margin-left:8px;transform:translateY(-2px);border:1px solid #9ce9eb73;background:#20aeb12b;color:#99f6ee;border-radius:8px;padding:4px 6px;font-size:12px;letter-spacing:.04em}
+h1 em{font-style:normal;color:#ffe9aa}.hlogo{display:block;height:clamp(22px,6.2vw,30px);width:auto;max-width:100%;overflow:visible}/* 上のロゴ：タイトル画面と同じブロック文字・同じ色（動きなし） */.chip3d{display:inline-block;vertical-align:middle;margin-left:8px;transform:translateY(-2px);border:1px solid #9ce9eb73;background:#20aeb12b;color:#99f6ee;border-radius:8px;padding:4px 6px;font-size:12px;letter-spacing:.04em}
 .best{text-align:center;min-width:104px;border:1px solid #6a79a1;border-radius:15px;padding:7px 12px;background:#222b4ed6;box-shadow:0 7px 15px #05091838}
 .best small{display:block;font-size:10px;letter-spacing:.12em;color:#acc0e1;font-weight:800}
 .best strong{font-size:22px;font-weight:1000;font-variant-numeric:tabular-nums}
@@ -129,7 +129,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </head>
 <body>
 <main class="wrap">
-  <header><div><div class="eyebrow">MINI GAME 01 · <button type="button" id="ver" aria-label="更新履歴を見る"></button></div><h1>Tip Top <em>Tower</em></h1></div><div class="best"><small id="lblBest">BEST SCORE</small><strong id="best">0</strong></div></header>
+  <header><div><div class="eyebrow">MINI GAME 01 · <button type="button" id="ver" aria-label="更新履歴を見る"></button></div><h1><svg class="hlogo" id="hLogo" role="img" aria-label="Tip Top Tower"></svg></h1></div><div class="best"><small id="lblBest">BEST SCORE</small><strong id="best">0</strong></div></header>
   <div class="stats" aria-label="プレイ状況"><div class="stat"><small id="lblHeight">高さ</small><strong id="height">0</strong></div><div class="stat"><small id="lblScore">スコア</small><strong id="score">0</strong></div><div class="stat"><small id="lblCombo">コンボ</small><strong id="combo">0</strong></div><div class="stat"><small id="timeLabel">残り秒</small><strong id="time">60</strong></div></div>
   <section class="stage" id="stage" aria-label="3Dブロック積みゲーム">
     <canvas id="game" width="720" height="1000" aria-label="画面タップで移動中の3Dブロックを落とす" tabindex="0"></canvas>
@@ -156,7 +156,7 @@ button:focus-visible,canvas:focus-visible{outline:3px solid #a7f5ff;outline-offs
 </main>
 <script>
 (()=>{'use strict';
-const VERSION='v1.1.1';
+const VERSION='v1.1.2';
 /* ===== 外部コードレビュー（v0.14.0 が対象、2026-10-20）への回答 =====
   ① メニュー中に RESTART を押すとゲームが始まる → 対応（v0.17.0）。state==='ready'（メニュー中）は無視する。
   ② 半透明のもの（雲・枠・おばけ・粒）の後ろが抜けて見える → 対応（v0.17.0）。不透明なものを描いた後、
@@ -556,6 +556,7 @@ function pickQuote(reason,h){const left=isStage()?goalFloors(stageIdx)-h:99;
  return drawQuote(Math.random()<.5?key:'any')}
 // ===== 更新履歴（遊ぶ人向けに短く。くわしい開発の記録は まとめ.md） =====
 const CHANGELOG=[
+ ['v1.1.2','2026-10-23','上のロゴをタイトル画面と同じブロック文字に'],
  ['v1.1.1','2026-10-23','ステージ選択がすぐ出るように。章の見出しの位置を調整'],
  ['v1.1.0','2026-10-23','第4章 ヨーロッパ編（ステージ31〜40）と、新しい仕掛け「フェイント」'],
  ['v1.0.2','2026-10-22','ランキングは上位30位まで'],
@@ -841,6 +842,7 @@ function popLetter(g){g.classList.remove('drop','pop');g.style.animationDelay='0
   const sp=svgEl('rect',{x:b.x+b.width/2-s/2,y:b.y+b.height*.3,width:s,height:s,fill:cols[i%cols.length],class:'sp',style:`--dx:${(Math.cos(a)*r).toFixed(1)}px;--dy:${(Math.sin(a)*r).toFixed(1)}px;--r:${(Math.random()*180-90).toFixed(0)}deg`},svg);
   setTimeout(()=>sp.remove(),800)}}
 buildLogo();
+blockText($('hLogo'),'TIP TOP TOWER',['#fff09a','#fff09a','#fff09a','#ffb2a8','#ffb2a8','#ffb2a8','#7cddf1','#7cddf1','#7cddf1','#7cddf1','#7cddf1']);// 上のロゴ（タイトル画面の色：TIP＝黄、TOP＝ピンク、TOWER＝水色）
 // R11：オフラインでも起動できるように（https で公開しているときだけ）
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 // ===== ルール説明ページ =====
